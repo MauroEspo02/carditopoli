@@ -297,7 +297,14 @@ async function onStep() {
   if (MAP.outdoor) updateZone();
   if (tileAt(PL.x, PL.y) === '"') {
     Sound.sfx('grass');
-    if (MAP.encounter && S.flags.balls && Math.random() < 0.11) await encounter();
+    if (MAP.encounter && !S.flags.balls) {
+      busy++;
+      await say(['PROFESSOR BIAGIO: Ehi, MAURO! Aspetta!', 'Nell\'erba alta vivono i CARDIMON, e ognuno è una tua competenza!', 'Tieni queste CARCIOFBALL: lanciale per catturarli e registrarli nel CARDIDEX.']);
+      S.flags.balls = true; Sound.jingle('catch');
+      await say(['MAURO ha ricevuto 99 CARCIOFBALL!', 'Ora cammina nell\'erba alta: i CARDIMON non tarderanno a farsi vedere!']);
+      autosave(); busy--; return;
+    }
+    if (MAP.encounter && Math.random() < 0.14) await encounter();
   }
 }
 async function enterRoom(id) {
