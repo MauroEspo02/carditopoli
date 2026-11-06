@@ -1137,9 +1137,12 @@ function drawSky(g, t, ph) {
     for (let i = 0; i < 4; i++) { const x = ((i * 80 + t * 0.15 * (i % 2 ? 1 : 0.6)) % 300) - 40, y = 20 + i * 14; ellipse(g, x, y, 16, 4, '#F8F8F8'); ellipse(g, x + 10, y - 3, 10, 4, '#F8F8F8'); }
   }
   // Vesuvio
-  const vc = ph === 'night' ? '#2A2E58' : ph === 'dusk' ? '#8A6890' : '#7898C8';
+  const vc = ph === 'night' ? '#4A5288' : ph === 'dusk' ? '#8A6890' : '#7898C8';
   g.fillStyle = vc; g.beginPath(); g.moveTo(30, 112); g.lineTo(78, 64); g.lineTo(92, 70); g.lineTo(104, 58); g.lineTo(118, 60); g.lineTo(176, 112); g.fill();
   R(g, 100, 56 + 0, 12, 3, vc);
+  if (ph === 'night') { // luce della luna sul fianco del vulcano
+    g.fillStyle = '#6A74A8'; g.beginPath(); g.moveTo(78, 64); g.lineTo(92, 70); g.lineTo(104, 58); g.lineTo(118, 60); g.lineTo(150, 88); g.lineTo(122, 70); g.lineTo(104, 64); g.lineTo(92, 74); g.fill();
+    R(g, 100, 55, 12, 1, '#8A94C8'); }
   // skyline di Cardito
   const sc = ph === 'night' ? '#1C2040' : ph === 'dusk' ? '#5A4060' : '#4E6E8E';
   R(g, 0, 104, 240, 20, sc);
