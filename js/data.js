@@ -8,7 +8,7 @@
 const PROFILE = {
   name: 'MAURO',
   fullName: 'Mauro Esposito',
-  role: 'Graphic designer · Content creator · Economista della cultura',
+  role: 'Economista della cultura e creativo',
   city: 'Milano ⇄ Napoli',
   since: 'Freelance dal 2018',
   studies: [
@@ -18,7 +18,7 @@ const PROFILE = {
     ['Grafica pubblicitaria', 'Accademia di Belle Arti, Napoli'],
   ],
   jobs: [
-    ['Graphic designer & content creator', 'Freelance, dal 2018'],
+    ['Creativo freelance', 'Grafica e contenuti, dal 2018'],
     ['Social media manager', 'Ristoranti indipendenti'],
     ['Co-fondatore PULLME UP', 'Social, Meta, SEO, siti e contenuti'],
     ['Rappresentante degli studenti', 'Magistrale EACT'],
@@ -143,7 +143,7 @@ const EVENTS = [
 
 /* Aspetto dei personaggi */
 const LOOKS = {
-  mauro: { style: 'caschetto', hair: '#E8C058', shirt: '#2E7A4A', pants: '#2C3448', skin: '#F8C898' },
+  mauro: { style: 'curly', hair: '#1E1814', shirt: '#2E7A4A', pants: '#2C3448', skin: '#F8C898' },
   prof: { style: 'bald', hair: '#B0B0B0', shirt: '#E8E8F0', coat: '#F8F8F8', pants: '#5A4A3A', mustache: '#B0B0B0', glasses: true },
   mamma: { style: 'curly', hair: '#4A2A1A', shirt: '#C85878', pants: '#5A3A4A', skirt: '#5A3A4A', blush: true },
   nonno: { style: 'bald', hair: '#D8D8D8', shirt: '#8A7A5A', pants: '#4A4A4A', mustache: '#D8D8D8' },
@@ -160,8 +160,8 @@ const LOOKS = {
   vigile: { style: 'cap', cap: '#F8F8F8', hair: '#3A2A1A', shirt: '#2A3A5A', pants: '#2A3A5A' },
   custode: { style: 'cap', cap: '#3A78C0', hair: '#C0C0C0', shirt: '#F0E8D8', pants: '#3A4A5A', beard: '#C0C0C0' },
   bimbo: { style: 'short', hair: '#C08040', shirt: '#60C0E0', pants: '#E8A040' },
-  terry: { style: 'long', hair: '#3A1A10', shirt: '#D8282C', pants: '#D8282C', skirt: '#D8282C', apron: '#F8F4EC', blush: true, shoes: '#8A1A1A' },
-  maurobimbo: { style: 'caschetto', hair: '#F4D878', shirt: '#4AA8F0', pants: '#F8F8F8', shoes: '#F8F8F8', blush: true },
+  terry: { style: 'long', hair: '#F0D070', shirt: '#D8282C', pants: '#D8282C', skirt: '#D8282C', apron: '#F8F4EC', blush: true, shoes: '#8A1A1A' },
+  maurobimbo: { style: 'curly', hair: '#1E1814', shirt: '#4AA8F0', pants: '#F8F8F8', shoes: '#F8F8F8', blush: true },
   fonico: { style: 'cap', cap: '#202028', hair: '#3A2A1A', shirt: '#303040', pants: '#202028', beard: '#3A2A1A' },
   ceramista: { style: 'bun', hair: '#8A5A30', shirt: '#D8C8B0', pants: '#5A4A3A', apron: '#6A8AB0' },
   commessa: { style: 'long', hair: '#1A1A1A', shirt: '#E85848', pants: '#303038', skirt: '#303038' },

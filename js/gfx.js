@@ -660,7 +660,7 @@ function drawCharFrame(g, dir, step, o) {
     else if (st === 'bun') { R(g, 4, 3, 8, 3, hair); R(g, 6, 0, 4, 3, hair); R(g, 3, 5, 1, 3, hair); R(g, 12, 5, 1, 3, hair); P(g, 7, 1, hl); }
     else if (st === 'cap') { R(g, 4, 2, 8, 4, o.cap || PAL.red); R(g, 3, 6, 10, 1, shade(o.cap || PAL.red, -0.3)); R(g, 5, 3, 3, 1, shade(o.cap || PAL.red, 0.3)); }
     else if (st === 'bald') { R(g, 3, 6, 1, 3, hair); R(g, 12, 6, 1, 3, hair); P(g, 6, 5, shade(sk, 0.3)); }
-    else if (st === 'curly') { for (let i = 0; i < 6; i++) ellipse(g, 4 + i * 1.6, 4, 1, 1, hair); R(g, 3, 3, 10, 3, hair); P(g, 4, 2, hair); P(g, 7, 2, hair); P(g, 10, 2, hair); P(g, 3, 6, hair); P(g, 12, 6, hair); P(g, 6, 3, hl); }
+    else if (st === 'curly') { [2, 5, 8, 11, 13].forEach(x => P(g, x, 3, hair)); P(g, 3, 7, hair); P(g, 12, 7, hair); for (let i = 0; i < 6; i++) ellipse(g, 4 + i * 1.6, 4, 1, 1, hair); R(g, 3, 3, 10, 3, hair); P(g, 4, 2, hair); P(g, 7, 2, hair); P(g, 10, 2, hair); P(g, 3, 6, hair); P(g, 12, 6, hair); P(g, 6, 3, hl); }
     else { R(g, 4, 3, 8, 3, hair); R(g, 5, 2, 6, 1, hair); R(g, 3, 4, 1, 4, hair); R(g, 12, 4, 1, 4, hair); R(g, 5, 3, 3, 1, hl); }
   } else if (dir === 'up') {
     if (st === 'cap') { R(g, 4, 2, 8, 6, o.cap || PAL.red); R(g, 4, 8, 8, 4, hair); }
@@ -671,12 +671,14 @@ function drawCharFrame(g, dir, step, o) {
       if (st === 'bun') R(g, 6, 0, 4, 3, hair);
       if (st === 'short' || st === 'curly') { R(g, 4, 11, 8, 1, sk); }
     }
+    if (st === 'curly') { [3, 5, 7, 9, 11].forEach(x => P(g, x, 1, hair)); [4, 7, 10].forEach(y => { P(g, 2, y, hair); P(g, 13, y, hair); }); [[5, 4], [9, 6], [6, 8], [10, 9], [8, 3]].forEach(([x, y]) => P(g, x, y, hl)); }
   } else {
     if (st === 'caschetto') { R(g, 4, 3, 9, 5, hair); R(g, 5, 2, 7, 1, hair); R(g, 4, 8, 4, 3, hair); R(g, 9, 7, 3, 1, hair); R(g, 6, 3, 4, 1, hl); }
     else if (st === 'long') { R(g, 4, 3, 9, 4, hair); R(g, 4, 7, 4, 8, hair); R(g, 6, 3, 4, 1, hl); }
     else if (st === 'bun') { R(g, 5, 3, 7, 3, hair); R(g, 3, 2, 3, 4, hair); R(g, 5, 6, 2, 2, hair); }
     else if (st === 'cap') { R(g, 5, 2, 7, 4, o.cap || PAL.red); R(g, 11, 5, 3, 1, shade(o.cap || PAL.red, -0.3)); R(g, 5, 6, 2, 3, hair); }
     else if (st === 'bald') { R(g, 5, 6, 2, 4, hair); }
+    else if (st === 'curly') { R(g, 4, 2, 9, 4, hair); R(g, 4, 6, 4, 4, hair); [5, 8, 11].forEach(x => P(g, x, 1, hair)); P(g, 3, 4, hair); P(g, 3, 7, hair); P(g, 12, 6, hair); [[6, 3], [9, 4], [5, 7]].forEach(([x, y]) => P(g, x, y, hl)); }
     else { R(g, 5, 3, 7, 3, hair); R(g, 6, 2, 5, 1, hair); R(g, 5, 6, 2, 3, hair); R(g, 7, 3, 3, 1, hl); }
   }
   if (o.hat === 'priest') { if (dir !== 'up') { R(g, 4, 2, 8, 3, '#202028'); R(g, 2, 5, 12, 1, '#202028'); } }

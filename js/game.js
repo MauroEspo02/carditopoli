@@ -1197,7 +1197,7 @@ async function intro() {
   await tween(16, t => introSpr.a = 1 - t);
   introSpr = { who: 'mauro', x: 120, a: 0 };
   await tween(20, t => introSpr.a = t);
-  await say(['E lui è MAURO!', 'Graphic designer, content creator ed economista della cultura. Freelance dal 2018.', 'Ogni edificio di Carditopoli custodisce uno dei suoi progetti.', 'Visitali tutti per ottenere le MEDAGLIE, e cattura i CARDIMON nell\'erba alta.']);
+  await say(['E lui è MAURO!', 'Economista della cultura e creativo.', 'Ogni edificio di Carditopoli custodisce uno dei suoi progetti.', 'Visitali tutti per ottenere le MEDAGLIE, e cattura i CARDIMON nell\'erba alta.']);
   await say(isTouch ? ['Comandi: croce per muoverti, A per parlare, B (tenuto premuto) per correre e per tornare indietro, START per il menu.'] : ['Comandi: FRECCE per muoverti, Z (o A) per parlare, X (o S) tenuto premuto per correre e per tornare indietro, INVIO per il menu. M accende e spegne la musica.']);
   await say('La tua avventura a CARDITOPOLI sta per cominciare!');
   await tween(30, t => { introSpr.shrink = t; });

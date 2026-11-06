@@ -118,18 +118,30 @@ const Sound = (() => {
     const t0 = ctx ? ctx.currentTime + 0.05 : 0;
     cur = { tr, onEnd, ch: tr.ch.map(c => ({ w: c.w, v: c.v, notes: parse(c.s), i: 0, next: t0 })) };
   }
+  // brani esterni in mp3 (es. la musica della lotta)
+  const FILES = { battle: 'audio/battle.mp3' };
+  let fileEl = null;
+  function stopFile() { if (fileEl) { fileEl.pause(); fileEl = null; } }
   function play(name) {
+    if (FILES[name]) {
+      if (fileEl && curName === name) return;
+      stopFile(); cur = null; curName = name;
+      fileEl = new Audio(FILES[name]); fileEl.loop = true; fileEl.volume = musicOn ? 0.7 : 0;
+      const p = fileEl.play(); if (p) p.catch(() => { stopFile(); curName = null; start('battle'); curName = name; });
+      return;
+    }
+    stopFile();
     if (curName === name && cur) return;
     curName = name;
     if (!ctx) return;
     start(name);
   }
   function jingle(name) {
-    const back = curName; curName = null;
+    const back = curName; curName = null; stopFile();
     if (!ctx) return;
     start(name, () => { if (back) play(back); });
   }
-  function stop() { cur = null; curName = null; }
+  function stop() { cur = null; curName = null; stopFile(); }
   /* effetti */
   function sfx(kind) {
     if (!ctx || !sfxOn) return;
@@ -160,7 +172,7 @@ const Sound = (() => {
     // note della prima voce di un brano con il loro tempo in secondi
     chart(name) { const tr = TRACKS[name]; let t = 0; const out = []; parse(tr.ch[0].s).forEach(n => { if (n.n !== 'r') out.push({ t, n: n.n, midi: SEMI[n.n.slice(0, -1)] + (+n.n.slice(-1) + 1) * 12 }); t += n.d * tr.step; }); return { notes: out, len: t }; },
     get ready() { return !!ctx; },
-    setMusic(on) { musicOn = on; if (musicG) musicG.gain.value = on ? 1 : 0; },
+    setMusic(on) { musicOn = on; if (musicG) musicG.gain.value = on ? 1 : 0; if (fileEl) fileEl.volume = on ? 0.7 : 0; },
     setSfx(on) { sfxOn = on; if (sfxG) sfxG.gain.value = on ? 1 : 0; },
     get musicOn() { return musicOn; }, get sfxOn() { return sfxOn; },
     get current() { return curName; },

@@ -133,7 +133,7 @@ function buildTown() {
   addSign(m, 27, 12, ['CAMPI DI CARCIOFI', 'Attenzione: CARDIMON selvatici nell\'erba alta!']);
   addSign(m, 32, 22, ['PIAZZA GARIBALDI', 'Il cuore della città: la chiesa di San Biagio, il castello e il municipio.']);
   addSign(m, 43, 21, ['VIA DEI PROGETTI', 'Qui ogni porta è un lavoro di MAURO. Entra e guarda!']);
-  addSign(m, 28, 38, ['CASA DI MAURO', 'Graphic designer, content creator, economista della cultura.']);
+  addSign(m, 28, 38, ['CASA DI MAURO', 'Economista della cultura e creativo.']);
   addSign(m, 7, 33, () => Game.projectTalk('land', ['L\'ORTO DI LAND', 'Un orto che racconta un paper e un gioco educativo.']));
   addSign(m, 17, 41, () => Game.extraTalk('giuleppe', ['CIMITERO DI GIULEPPE', 'Qui riposano gli ex membri del gruppo WhatsApp "Gli amici di Giuleppe".']));
   addSign(m, 51, 37, () => Game.projectTalk('fritz', ['PALCO DEL FRITZ FESTIVAL', 'Stasera si suona!']));
@@ -226,7 +226,7 @@ function buildInteriors(town) {
   R2('comune', 'MUNICIPIO', 11, 9, 'm', '#ECCABC', m => {
     addProp(m, 'counter', 4, 3, { act: () => Game.npcTalk('impiegata') });
     addProp(m, 'shelf', 0, 1, { fh: 2, act: ['Faldoni, faldoni, faldoni... "CURRICULUM — MAURO ESPOSITO".'] });
-    addProp(m, 'shelf', 9, 1, { fh: 2, act: ['Registri dell\'anagrafe di Carditopoli. Abitanti: tanti Cardimon e un graphic designer.'] });
+    addProp(m, 'shelf', 9, 1, { fh: 2, act: ['Registri dell\'anagrafe di Carditopoli. Abitanti: tanti Cardimon e un economista della cultura.'] });
     addProp(m, 'plant', 2, 6, { fh: 2 }); addProp(m, 'plant', 8, 6, { fh: 2 });
     addProp(m, 'poster', 3, 0, { solid: false, fh: 1, oy: 0, wallItem: true }); addProp(m, 'poster', 7, 0, { solid: false, fh: 1, oy: 0, wallItem: true });
     addNpc(m, 'impiegata', 'impiegata', 5, 2, 'down', () => Game.npcTalk('impiegata'), { counter: true });
