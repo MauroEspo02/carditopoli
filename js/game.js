@@ -222,6 +222,8 @@ function initGfx() {
 let MAP = null, solid = null, NPCS = [];
 const PL = { qa: 0, qs: 0, still: 9, x: 0, y: 0, px: 0, py: 0, dir: 'down', moving: false, tx: 0, ty: 0, tiles: 0, turn: 0, bumpT: 0 };
 let busy = 0, zoneName = '';
+const KIRA = { x: 0, y: 0, px: 0, py: 0, dir: 'down', moving: false, tx: 0, ty: 0, tiles: 0 };
+let KIRA_SH = null;
 const DV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPP = { up: 'down', down: 'up', left: 'right', right: 'left' };
 
@@ -240,6 +242,7 @@ function loadMap(id, x, y, dir) {
   if (!MAP.rt) MAP.rt = MAP.npcs.map(d => ({ d, x: d.x, y: d.y, px: d.x * 16, py: d.y * 16, dir: d.dir, moving: false, tx: d.x, ty: d.y, tiles: 0, timer: 60 + Math.random() * 120 }));
   NPCS = MAP.rt;
   Object.assign(PL, { x, y, px: x * 16, py: y * 16, dir: dir || 'down', moving: false, tx: x, ty: y });
+  { const [bx, by] = DV[OPP[PL.dir]]; let kx = x + bx, ky = y + by; if (blocked(kx, ky, KIRA)) { kx = x; ky = y; } Object.assign(KIRA, { x: kx, y: ky, px: kx * 16, py: ky * 16, tx: kx, ty: ky, moving: false, dir: PL.dir }); }
   zoneName = '';
   if (MAP.outdoor) updateZone(); else banner(MAP.name);
   Sound.play(MAP.music);
@@ -269,6 +272,7 @@ function updatePlayer() {
     const tx = PL.tx * 16, ty = PL.ty * 16;
     PL.px += Math.sign(tx - PL.px) * Math.min(spd, Math.abs(tx - PL.px));
     PL.py += Math.sign(ty - PL.py) * Math.min(spd, Math.abs(ty - PL.py));
+    if (KIRA.moving) { const kx = KIRA.tx * 16, ky = KIRA.ty * 16; KIRA.px += Math.sign(kx - KIRA.px) * Math.min(spd, Math.abs(kx - KIRA.px)); KIRA.py += Math.sign(ky - KIRA.py) * Math.min(spd, Math.abs(ky - KIRA.py)); if (KIRA.px === kx && KIRA.py === ky) { KIRA.moving = false; KIRA.x = KIRA.tx; KIRA.y = KIRA.ty; KIRA.tiles++; } }
     if (PL.px === tx && PL.py === ty) { PL.moving = false; PL.x = PL.tx; PL.y = PL.ty; PL.tiles++; onStep(); }
     return;
   }
@@ -289,6 +293,8 @@ function updatePlayer() {
     if (PL.bumpT <= 0) { Sound.sfx('bump'); PL.bumpT = 18; } PL.bumpT--; return;
   }
   PL.tx = nx; PL.ty = ny; PL.moving = true;
+  if (!(KIRA.x === PL.x && KIRA.y === PL.y)) { const ddx = PL.x - KIRA.x, ddy = PL.y - KIRA.y; KIRA.dir = ddx > 0 ? 'right' : ddx < 0 ? 'left' : ddy > 0 ? 'down' : 'up'; } else KIRA.dir = d;
+  KIRA.tx = PL.x; KIRA.ty = PL.y; KIRA.moving = !(KIRA.x === PL.x && KIRA.y === PL.y);
 }
 async function onStep() {
   const w = MAP.warps[PL.x + ',' + PL.y];
@@ -343,6 +349,7 @@ function updateNpcs() {
 async function interact() {
   const [dx, dy] = DV[PL.dir], fx = PL.x + dx, fy = PL.y + dy;
   const n = NPCS.find(n => n.x === fx && n.y === fy && !n.moving);
+  if (!n && KIRA.x === fx && KIRA.y === fy) { busy++; try { KIRA.dir = OPP[PL.dir]; Sound.sfx('select'); await say(rnd([['KIRA scodinzola felice!'], ['KIRA ti guarda con gli occhi a mandorla. Vuole un biscotto.'], ['KIRA fa un mezzo ululato da shiba: "Awuuu!"'], ['KIRA si sdraia a pancia in su. Grattini obbligatori.']])); } finally { busy--; } return; }
   busy++;
   try {
     if (n) {
@@ -431,6 +438,10 @@ function drawWorld() {
     if (sx > 240 || sy > 160 || sx + o.img.width < 0 || sy + o.img.height < 0) continue;
     list.push({ z: (o.y + o.h) * 16, f: () => g.drawImage(o.img, sx, sy) });
   }
+  if (!KIRA_SH) KIRA_SH = kiraSheet();
+  { const sx = Math.round(KIRA.px - cx), sy = Math.round(KIRA.py - cy);
+    const fr = KIRA_SH[KIRA.dir][KIRA.moving && (Math.abs(KIRA.px - KIRA.tx * 16) + Math.abs(KIRA.py - KIRA.ty * 16)) > 8 ? 1 : 0];
+    list.push({ z: KIRA.py + 16.2, f: () => { g.drawImage(SHADOW, sx, sy + 12); g.drawImage(fr, sx, sy + 1); if (tileAt(KIRA.x, KIRA.y) === '"' && !KIRA.moving) g.drawImage(TILES['"'].top, KIRA.x * 16 - cx, KIRA.y * 16 - cy); } }); }
   const chars = NPCS.map(n => ({ c: n, look: n.d.look })).concat([{ c: PL, look: 'mauro', me: true }]);
   for (const { c, look } of chars) {
     const sx = Math.round(c.px - cx), sy = Math.round(c.py - cy);
@@ -507,8 +518,8 @@ const Game = {
       case 'mamma': {
         if (!S.flags.mamma) {
           S.flags.mamma = true;
-          await say(['MAURO! Finalmente ti sei svegliato.', 'Il PROFESSOR BIAGIO ti cercava: ti aspetta a nord, vicino ai campi di carciofi.', 'E prima di uscire... hai mangiato? No? Vabbè, prenditi almeno un panino.', 'Se ti serve qualcosa, sul PC ci sono tutti i tuoi contatti.']);
-        } else await say(rnd([['Hai mangiato?'], ['Copriti, che fuori fa freschetto!'], ['Quando la discuti questa tesi? Voglio venire!'], ['Il Professore ti cercava, vicino ai campi a nord.']]));
+          await say(['MAMMA CARLA: MAURO! Finalmente ti sei svegliato.', 'Il PROFESSOR BIAGIO ti cercava: ti aspetta a nord, vicino ai campi di carciofi.', 'E prima di uscire... hai mangiato? No? Vabbè, prenditi almeno un panino.', 'Se ti serve qualcosa, sul PC ci sono tutti i tuoi contatti.']);
+        } else await say(rnd([['MAMMA CARLA: Hai mangiato?'], ['MAMMA CARLA: Hai portato fuori KIRA?'], ['Copriti, che fuori fa freschetto!'], ['Quando la discuti questa tesi? Voglio venire!'], ['Il Professore ti cercava, vicino ai campi a nord.']]));
         break;
       }
       case 'cantante':
@@ -524,7 +535,7 @@ const Game = {
         await say(['Benvenuti al CASTELLO di Carditopoli!', 'Nella teca è esposta la SCHEDA di MAURO: chi è, cosa ha studiato e le sue medaglie.', 'Il PC vicino all\'uscita apre il CARDIDEX.']);
         return openTrainer(0);
       case 'cuoco': return Game.projectTalk('rockandfeller', ['Benvenuto da ROCK AND FELLER! Doner kebab, da Caserta con amore.', 'Il sito l\'ha fatto MAURO: menù, QR dinamici e pure il pannello admin.', 'E il logo nuovo? Sempre lui, con PULLME UP.']);
-      case 'mercoleterry': return Game.projectTalk('mercoleterry', ['Benvenuto da MERCOLETERRY!', 'Datterini campani e ciliegini: la passata più chiacchierata di Carditopoli.', 'Nome, etichetta, logo, video e sito: firmato MAURO.']);
+      case 'mercoleterry': return Game.projectTalk('mercoleterry', ['TERRY: Ciao! Benvenuto da MERCOLETERRY, io sono TERRY.', 'Datterini campani e ciliegini: la passata più chiacchierata di Carditopoli.', 'Nome, etichetta, logo, video e sito: firmato MAURO. Il nome? Diciamo che mi somiglia un po\'...']);
       case 'pullmeup': return Game.projectTalk('pullmeup', ['Ué, socio! Benvenuto in PULLME UP.', 'Sei anni di social, Meta, SEO, siti e contenuti.', 'Facciamo crescere i locali indipendenti, un post alla volta.']);
       case 'sabaude': return Game.projectTalk('sabaudo', ['Bogia nen! Benvenuto alle RESIDENZE SABAUDE.', 'In vetrina c\'è il PASSAPORTO SABAUDO: un viaggio a tappe nelle residenze reali del Piemonte.']);
       case 'ceramica':
@@ -1174,7 +1185,7 @@ async function startGame(isNew) {
   scene = 'world';
   loadMap(S.map, S.x, S.y, S.dir);
   await fadeTo(0, 16);
-  if (isNew) { busy++; await wait(20); await say(['MAURO si sveglia nella sua stanza a CARDITOPOLI.', 'Dalla cucina arriva un profumo di caffè... e la voce della mamma.']); busy--; }
+  if (isNew) { busy++; await wait(20); await say(['MAURO si sveglia nella sua stanza a CARDITOPOLI.', 'Dalla cucina arriva un profumo di caffè... e la voce di MAMMA CARLA.', 'KIRA, la sua shiba inu bianca, scodinzola: è ora di uscire!']); busy--; }
 }
 let introSpr = null;
 async function intro() {

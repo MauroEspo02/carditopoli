@@ -423,12 +423,23 @@ function building(kind) {
   const win = (x, y, ww = 10, hh = 9, fr) => { windowAt(g, x, y + top, ww, hh, fr); wins.push([x, y + top, ww, hh]); };
   switch (kind) {
     case 'casa': {
-      w = 5; h = 4; c = make(w, h, 0); g = c.g;
-      roofSlope(g, 1, 2, 78, 26, '#E07040');
-      R(g, 3, 28, 74, 36, '#F4E8D0'); R(g, 3, 28, 74, 2, '#D8C8A8');
-      win(10, 36); win(58, 36); doorAt(g, 34, 49, '#9A5A30'); door = 2;
-      R(g, 60, 4, 8, 10, '#B85840'); R(g, 59, 2, 10, 3, '#904030');
-      text3(g, 'CASA', 33, 31, '#9A7A50'); break;
+      w = 7; h = 6; top = 10; c = make(w, h, top); g = c.g;
+      const cr = '#F2E8D4', cd = '#DCCFB6', rb = '#A8402E', rbd = '#7A2A20', sh = '#6A1E22', gl = '#2E3A3C';
+      R(g, 4, top + 20, 104, 76, cr); R(g, 4, top + 20, 104, 2, cd);
+      R(g, 0, top + 16, 44, 4, rb); R(g, 0, top + 20, 44, 2, rbd); R(g, 68, top + 16, 44, 4, rb); R(g, 68, top + 20, 44, 2, rbd);
+      R(g, 42, 2, 28, top + 94, cr); R(g, 66, 2, 4, top + 94, cd); R(g, 40, 0, 32, 4, rb); R(g, 40, 4, 32, 1, rbd);
+      for (const yy of [8, 34, 58]) { R(g, 49, top + yy - 6, 14, 16, '#E8E8E0'); R(g, 50, top + yy - 5, 12, 14, '#8AA0B0'); R(g, 55, top + yy - 5, 1, 14, '#E8E8E0'); wins.push([50, top + yy - 5, 12, 14]); }
+      const shutter = (x, y) => { R(g, x, y, 12, 14, sh); for (let k = 2; k < 14; k += 3) R(g, x + 1, y + k, 10, 1, '#4A1418'); R(g, x + 5, y, 1, 14, '#4A1418'); };
+      shutter(10, top + 26); shutter(26, top + 26); shutter(78, top + 26); shutter(94, top + 26); shutter(14, top + 56); shutter(82, top + 56);
+      wins.push([10, top + 26, 12, 14], [94, top + 26, 12, 14]);
+      const balcony = (x, y, ww) => { R(g, x, y, ww, 7, gl); R(g, x, y, ww, 1, '#5A6A6C'); R(g, x, y + 7, ww, 2, rb); R(g, x, y + 9, ww, 1, rbd); for (let k = x + 3; k < x + ww; k += 7) P(g, k, y + 4, '#3A8A3A'); };
+      balcony(2, top + 42, 38); balcony(72, top + 42, 38); balcony(76, top + 72, 34);
+      for (let x = 6; x < 36; x += 4) R(g, x, top + 51, 4, 4, (x / 4) % 2 ? PAL.wht : '#9A9A90');
+      R(g, 44, top + 70, 24, 2, rb); R(g, 46, top + 74, 20, 22, '#F8E8B8'); for (let x = 47; x < 66; x += 3) R(g, x, top + 76, 1, 20, '#5A4A3A'); R(g, 46, top + 85, 20, 1, '#5A4A3A');
+      R(g, 53, top + 72, 6, 2, '#FFF4C0'); wins.push([46, top + 74, 20, 22]);
+      R(g, 84, top + 84, 26, 3, '#F0EEE8'); R(g, 86, top + 87, 1, 9, '#6A4020'); R(g, 106, top + 87, 1, 9, '#6A4020'); R(g, 90, top + 90, 3, 3, PAL.red); R(g, 98, top + 91, 3, 3, PAL.red);
+      ellipse(g, 12, top + 90, 11, 6, PAL.leafd); ellipse(g, 11, top + 89, 9, 4, PAL.leaf);
+      door = 3; break;
     }
     case 'chiesa': {
       w = 7; h = 6; top = 32; c = make(w, h, top); g = c.g;
@@ -767,4 +778,32 @@ function icon(kind) {
     case 'globe': ellipse(g, 8, 8, 6, 6, '#3A78C0'); ellipse(g, 6, 6, 2, 2, PAL.leaf); ellipse(g, 10, 10, 2, 1, PAL.leaf); break;
   }
   return outline(c);
+}
+
+/* KIRA, shiba inu bianca (16x16, 4 direzioni x 2 passi) */
+function kiraSheet() {
+  const W = '#FAF6EE', S = '#E2D8C6', N = '#202020', IN = '#F0B8A8';
+  function fr(dir, st) {
+    const c = mk(16, 16), g = c.g, l = st ? 1 : 0;
+    if (dir === 'right') {
+      ellipse(g, 7, 10, 5, 3, W); R(g, 4, 12, 7, 1, S);
+      R(g, 3, 12 + l, 2, 3 - l, W); R(g, 6, 12, 2, 3, S); R(g, 9, 13 - l, 2, 2 + l, W); R(g, 11, 12, 1, 3, S);
+      ellipse(g, 12, 7, 3, 3, W); R(g, 13, 7, 3, 2, W); P(g, 15, 7, N); P(g, 12, 6, N);
+      R(g, 10, 2, 2, 3, W); P(g, 11, 3, IN); R(g, 13, 3, 1, 2, W);
+      ellipse(g, 2, 6, 2, 2, W); P(g, 2, 6, S); R(g, 2, 7, 2, 2, W);
+    } else if (dir === 'down') {
+      ellipse(g, 8, 11, 4, 3, W); R(g, 5, 13, 2, 2 - l, W); R(g, 9, 13, 2, 1 + l, W);
+      ellipse(g, 8, 6, 4, 3, W); R(g, 4, 2, 2, 3, W); R(g, 10, 2, 2, 3, W); P(g, 5, 3, IN); P(g, 10, 3, IN);
+      P(g, 6, 6, N); P(g, 10, 6, N); P(g, 8, 8, N); ellipse(g, 13, 9, 2, 2, W);
+    } else {
+      ellipse(g, 8, 11, 4, 3, W); R(g, 5, 13, 2, 2 - l, W); R(g, 9, 13, 2, 1 + l, W);
+      ellipse(g, 8, 6, 4, 3, S); R(g, 4, 2, 2, 3, S); R(g, 10, 2, 2, 3, S);
+      ellipse(g, 8, 10, 2, 2, W); P(g, 8, 10, S);
+    }
+    return outline(c);
+  }
+  const out = {};
+  ['down', 'up', 'right'].forEach(d => out[d] = [fr(d, 0), fr(d, 1)]);
+  out.left = out.right.map(mirror);
+  return out;
 }

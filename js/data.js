@@ -160,6 +160,7 @@ const LOOKS = {
   vigile: { style: 'cap', cap: '#F8F8F8', hair: '#3A2A1A', shirt: '#2A3A5A', pants: '#2A3A5A' },
   custode: { style: 'cap', cap: '#3A78C0', hair: '#C0C0C0', shirt: '#F0E8D8', pants: '#3A4A5A', beard: '#C0C0C0' },
   bimbo: { style: 'short', hair: '#C08040', shirt: '#60C0E0', pants: '#E8A040' },
+  terry: { style: 'long', hair: '#3A1A10', shirt: '#D8282C', pants: '#D8282C', skirt: '#D8282C', apron: '#F8F4EC', blush: true, shoes: '#8A1A1A' },
   maurobimbo: { style: 'caschetto', hair: '#F4D878', shirt: '#4AA8F0', pants: '#F8F8F8', shoes: '#F8F8F8', blush: true },
   fonico: { style: 'cap', cap: '#202028', hair: '#3A2A1A', shirt: '#303040', pants: '#202028', beard: '#3A2A1A' },
   ceramista: { style: 'bun', hair: '#8A5A30', shirt: '#D8C8B0', pants: '#5A4A3A', apron: '#6A8AB0' },

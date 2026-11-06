@@ -94,7 +94,7 @@ function buildTown() {
   addBld(m, 45, 23, 'kebab', 'kebab');
   addBld(m, 52, 23, 'mercoleterry', 'mercoleterry');
   addBld(m, 45, 33, 'pullmeup', 'pullmeup');
-  addBld(m, 22, 35, 'casa', 'casa');
+  addBld(m, 21, 33, 'casa', 'casa');
   addBld(m, 37, 39, 'archivio', 'archivio');
   addBld(m, 4, 50, 'ceramica', 'ceramica');
   addBld(m, 12, 49, 'musica', 'musica');
@@ -113,7 +113,7 @@ function buildTown() {
   addProp(m, 'speaker', 22, 23, { act: ['Una cassa. Dal volume si capisce che è un neomelodico.'] });
   addProp(m, 'flowerpot', 25, 21); addProp(m, 'flowerpot', 32, 21);
   addProp(m, 'vespa', 11, 30 - 1 - 1, { fw: 2, act: ['Una Vespa azzurra. Sulla sella c\'è scritto: "NON SEDERTI, SI BRUCIA".'] });
-  addProp(m, 'mailbox', 21, 38, { act: ['La cassetta della posta di casa. Dentro: bollette e un volantino di Rock and Feller.'] });
+  addProp(m, 'mailbox', 20, 38, { act: ['La cassetta della posta di casa. Dentro: bollette e un volantino di Rock and Feller.'] });
   addProp(m, 'crates', 51, 27, { fw: 2, act: ['Cassette di pomodori datterini. Profumano d\'estate.'] });
   addProp(m, 'barrier', 56, 29, { fw: 3, oy: 0 });
   addProp(m, 'cone', 57, 31); addProp(m, 'cone', 58, 31); addProp(m, 'cone', 58, 30);
@@ -129,11 +129,11 @@ function buildTown() {
   [[16, 43], [17, 43], [19, 43], [20, 43]].forEach(([x, y], i) => addProp(m, 'tomb', x, y, { act: tombs[i] }));
 
   // cartelli
-  addSign(m, 27, 33, ['BENVENUTO A CARDITOPOLI!', 'Dove crescono i carciofi... e le idee.']);
+  addSign(m, 30, 33, ['BENVENUTO A CARDITOPOLI!', 'Dove crescono i carciofi... e le idee.']);
   addSign(m, 27, 12, ['CAMPI DI CARCIOFI', 'Attenzione: CARDIMON selvatici nell\'erba alta!']);
   addSign(m, 32, 22, ['PIAZZA GARIBALDI', 'Il cuore della città: la chiesa di San Biagio, il castello e il municipio.']);
   addSign(m, 43, 21, ['VIA DEI PROGETTI', 'Qui ogni porta è un lavoro di MAURO. Entra e guarda!']);
-  addSign(m, 26, 38, ['CASA DI MAURO', 'Graphic designer, content creator, economista della cultura.']);
+  addSign(m, 28, 38, ['CASA DI MAURO', 'Graphic designer, content creator, economista della cultura.']);
   addSign(m, 7, 33, () => Game.projectTalk('land', ['L\'ORTO DI LAND', 'Un orto che racconta un paper e un gioco educativo.']));
   addSign(m, 17, 41, () => Game.extraTalk('giuleppe', ['CIMITERO DI GIULEPPE', 'Qui riposano gli ex membri del gruppo WhatsApp "Gli amici di Giuleppe".']));
   addSign(m, 51, 37, () => Game.projectTalk('fritz', ['PALCO DEL FRITZ FESTIVAL', 'Stasera si suona!']));
@@ -262,7 +262,7 @@ function buildInteriors(town) {
     addProp(m, 'crates', 6, 5, { fh: 1, act: ['Bucce di pomodoro messe a essiccare. Diventeranno crackers!'] });
     addProp(m, 'counter', 3, 4, { act: () => Game.npcTalk('mercoleterry') });
     addProp(m, 'plant', 9, 1, { fh: 2 });
-    addNpc(m, 'contadina', 'ragazza', 4, 3, 'down', () => Game.npcTalk('mercoleterry'), { counter: true });
+    addNpc(m, 'terry', 'terry', 4, 3, 'down', () => Game.npcTalk('mercoleterry'), { counter: true });
   });
   R2('pullmeup', 'PULLME UP', 10, 8, 'm', '#3A4452', m => {
     addProp(m, 'desk', 1, 2, { act: ['Due monitor: su uno un calendario editoriale, sull\'altro una campagna Meta.'] });
