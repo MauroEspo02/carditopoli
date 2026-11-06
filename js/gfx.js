@@ -211,6 +211,7 @@ function buildTiles() {
       for (let k = 0; k < 2; k++) { const x = 2 + k * 7 + i; ellipse(g, x + 2, 8, 3, 3, PAL.leaf); P(g, x + 1, 7, PAL.leafl); R(g, x + 3, 10, 2, 2, PAL.red); P(g, x + 3, 10, PAL.redl); P(g, x, 11, PAL.red); }
     }), solid: true
   };
+  TILES['p'] = { v: [0, 1].map(i => { const c = mk(16, 16), gg = c.g; R(gg, 0, 0, 16, 16, i ? '#5AB848' : '#68C454'); for (let k = 0; k < 5; k++) P(gg, (k * 7 + i * 3) % 16, (k * 5) % 16, i ? '#4EA83E' : '#5AB848'); return c; }), stripe: true };
   TILES['F'] = { fence: true, solid: true, v: [mk(16, 16)] };
   TILES['x'] = { v: [(() => { const c = mk(16, 16); R(c.g, 0, 0, 16, 16, '#101018'); return c; })()], solid: true };
   // pavimenti interni
@@ -300,17 +301,44 @@ function buildProps() {
   prop('tomb', 16, 16, g => { R(g, 3, 4, 10, 11, '#9CA0A8'); R(g, 4, 2, 8, 2, '#9CA0A8'); R(g, 4, 5, 8, 9, '#B4B8C0'); R(g, 7, 6, 2, 6, '#7C8088'); R(g, 5, 8, 6, 2, '#7C8088'); R(g, 2, 14, 12, 2, PAL.gd); });
   prop('cardtable', 32, 24, g => { ellipse(g, 16, 9, 14, 6, '#2E7A4A'); ellipse(g, 16, 8, 12, 4, '#3A9A5C'); R(g, 14, 14, 4, 8, PAL.woodd); R(g, 10, 21, 12, 2, PAL.woodd); R(g, 9, 6, 4, 5, PAL.wht); R(g, 18, 5, 4, 5, PAL.wht); P(g, 10, 7, PAL.red); P(g, 20, 6, PAL.blk); });
   prop('speaker', 16, 24, g => { R(g, 2, 2, 12, 20, '#303038'); ellipse(g, 8, 8, 4, 4, '#505060'); ellipse(g, 8, 8, 2, 2, '#202028'); ellipse(g, 8, 17, 3, 3, '#505060'); });
-  prop('boat', 48, 24, g => {
-    // gozzo di legno
-    for (let y = 0; y < 10; y++) { const inset = Math.round(y * y / 6); R(g, 2 + inset, 10 + y, 44 - inset * 2, 1, y < 2 ? '#F0E8D8' : (y < 6 ? '#3A78C0' : PAL.woodd)); }
-    R(g, 6, 9, 36, 2, '#C8603A'); R(g, 23, 0, 2, 10, PAL.woodd); R(g, 25, 1, 10, 7, '#F0E8D8'); R(g, 25, 1, 10, 1, '#D8D0C0');
-    P(g, 2, 9, PAL.woodd); P(g, 45, 9, PAL.woodd);
+  prop('boat', 64, 48, g => {
+    // gozzo rosso e bianco con tendalino, albero, remi e motore fuoribordo (come la barca di nonno Enzo)
+    const top = x => 31 - Math.round(Math.pow(Math.max(0, x - 40) / 22, 2) * 6) - Math.round(x / 64 * 2);
+    const bot = x => 45 - Math.round(Math.pow(Math.max(0, x - 36) / 26, 1.6) * 13);
+    for (let x = 6; x < 62; x++) {
+      const t = top(x), b = bot(x), h = b - t;
+      for (let y = t; y < b; y++) {
+        const f = (y - t) / h;
+        let col = f < 0.12 ? '#F4F0E6' : f < 0.4 ? '#D8282C' : f < 0.47 ? '#F4F0E6' : f < 0.68 ? '#D8282C' : '#F0ECE2';
+        if (f >= 0.12 && f < 0.4 && (y - t) === Math.round(h * 0.26)) col = '#B81C22';
+        if (f >= 0.68 && (y - t) % 3 === 0) col = '#DCD8CE';
+        P(g, x, y, col);
+      }
+      P(g, x, t, '#FFFFFF');
+    }
+    R(g, 6, top(6), 2, bot(6) - top(6), '#B81C22'); // specchio di poppa
+    // tendalino su tre paletti
+    for (const px of [12, 24, 37]) R(g, px, 9, 1, top(px) - 9, '#D8A060');
+    R(g, 9, 8, 34, 2, '#C89050');
+    R(g, 7, 5, 38, 3, '#F8F8F4'); for (let x = 7; x < 45; x += 3) P(g, x, 4 + (x % 2), '#F8F8F4'); for (let x = 8; x < 45; x += 4) P(g, x, 8, '#E8E8E0');
+    // albero
+    R(g, 46, 0, 2, top(46), '#D8A868'); P(g, 47, 0, '#B88848');
+    // remi
+    for (let i = 0; i < 30; i++) P(g, 14 + i, 30 - Math.round(i * 0.22), '#8A2A2A');
+    for (let i = 0; i < 6; i++) P(g, 10 + i, 31, '#8A2A2A');
+    // bitte e prua
+    R(g, 56, top(56) - 2, 3, 2, '#C83030'); R(g, 20, top(20) - 2, 2, 2, '#C83030');
+    // motore fuoribordo blu
+    R(g, 0, 22, 8, 8, '#2A3A90'); R(g, 1, 23, 6, 2, '#4A5AB8'); R(g, 7, 24, 3, 1, '#303030'); R(g, 3, 30, 2, 8, '#303038');
   });
   prop('mailbox', 16, 16, g => { R(g, 7, 8, 2, 7, '#505860'); R(g, 3, 3, 10, 6, PAL.red); R(g, 3, 3, 10, 1, PAL.redl); R(g, 5, 5, 6, 1, PAL.redd); });
   prop('vespa', 32, 24, g => {
     ellipse(g, 7, 19, 4, 4, '#303038'); ellipse(g, 25, 19, 4, 4, '#303038'); ellipse(g, 7, 19, 2, 2, '#A0A0A8'); ellipse(g, 25, 19, 2, 2, '#A0A0A8');
     ellipse(g, 22, 14, 8, 5, '#68C0B0'); R(g, 6, 10, 6, 8, '#68C0B0'); R(g, 6, 3, 2, 8, '#505860'); R(g, 3, 3, 8, 2, '#505860'); R(g, 17, 9, 10, 2, '#5A4A3A'); P(g, 5, 11, PAL.yel);
   });
+  prop('goal', 16, 48, g => { R(g, 2, 0, 3, 48, PAL.wht); R(g, 2, 0, 14, 3, PAL.wht); R(g, 2, 45, 14, 3, PAL.wht); for (let y = 4; y < 45; y += 4) R(g, 5, y, 11, 1, '#C8D0D8'); for (let x = 7; x < 16; x += 4) R(g, x, 3, 1, 42, '#C8D0D8'); });
+  prop('ball', 16, 16, g => { ellipse(g, 8, 10, 4, 4, PAL.wht); R(g, 7, 9, 3, 2, '#303038'); P(g, 5, 11, '#303038'); P(g, 11, 8, '#303038'); P(g, 8, 13, '#303038'); });
+  prop('acoustic', 16, 32, g => { ellipse(g, 8, 23, 6, 7, '#D89848'); ellipse(g, 8, 16, 4, 4, '#D89848'); ellipse(g, 8, 20, 2, 2, '#3A2A1A'); R(g, 7, 0, 2, 14, '#6A4020'); R(g, 6, 0, 4, 3, '#4A2A10'); R(g, 7, 26, 3, 1, '#4A2A10'); for (let y = 2; y < 25; y += 2) P(g, 8, y, '#E8E0D0'); });
   // ---- interni ----
   prop('bed', 16, 32, g => { R(g, 1, 2, 14, 28, PAL.woodd); R(g, 2, 3, 12, 26, '#F0F0F8'); R(g, 3, 4, 10, 6, PAL.wht); R(g, 2, 12, 12, 17, '#4878D0'); R(g, 2, 12, 12, 2, '#6898E8'); });
   prop('pc', 32, 32, g => { R(g, 1, 16, 30, 4, PAL.wood); R(g, 1, 20, 30, 10, PAL.woodd); R(g, 3, 22, 26, 6, PAL.wood); R(g, 7, 2, 18, 13, '#D8D8E0'); R(g, 9, 4, 14, 9, '#3060A0'); R(g, 10, 5, 6, 1, '#80C0F8'); R(g, 10, 7, 9, 1, '#80C0F8'); R(g, 13, 15, 6, 2, '#B0B0B8'); R(g, 8, 17, 16, 2, '#E8E8F0'); });
@@ -336,8 +364,34 @@ function buildProps() {
   prop('poster', 16, 16, g => { R(g, 2, 1, 12, 14, PAL.wht); R(g, 3, 2, 10, 7, '#58A8E0'); R(g, 3, 9, 10, 1, PAL.red); R(g, 4, 11, 8, 1, '#888'); R(g, 4, 13, 6, 1, '#888'); });
   prop('desk', 48, 24, g => { R(g, 1, 6, 46, 6, '#E8E8F0'); R(g, 3, 12, 3, 11, '#707880'); R(g, 42, 12, 3, 11, '#707880'); R(g, 8, 0, 14, 8, '#303038'); R(g, 9, 1, 12, 5, '#40C080'); R(g, 28, 0, 14, 8, '#303038'); R(g, 29, 1, 12, 5, '#E06090'); });
   prop('mixer', 32, 24, g => { R(g, 1, 8, 30, 14, '#303038'); for (let i = 0; i < 6; i++) { R(g, 3 + i * 5, 10, 2, 8, '#606070'); R(g, 3 + i * 5, 12 + (i * 3) % 5, 2, 2, i % 2 ? PAL.red : PAL.yel); } });
+  const VASES = ['#2E6AB0', '#E8B030', '#3A9A6A', '#C85030', '#F0E8D8', '#7A4AA0'];
+  function vase(g, x, y, s, col) { ellipse(g, x, y - s, s, s + 1, col); R(g, x - (s >> 1), y - s * 2 - 3, s, 3, col); R(g, x - (s >> 1) - 1, y - s * 2 - 4, s + 2, 1, shade(col, -0.25)); P(g, x - s + 1, y - s - 1, shade(col, 0.45)); R(g, x - s + 1, y - s + 1, s * 2 - 1, 1, shade(col, -0.3)); }
+  prop('vaseshelf', 32, 32, (g) => { R(g, 1, 1, 30, 30, PAL.woodd); R(g, 3, 3, 26, 26, PAL.wooddd); for (let s = 0; s < 2; s++) { R(g, 3, 14 + s * 13, 26, 2, PAL.wood); for (let k = 0; k < 3; k++) vase(g, 8 + k * 8, 14 + s * 13, 3, VASES[(k + s * 3) % 6]); } });
+  prop('vases', 32, 24, g => { R(g, 1, 12, 30, 4, PAL.wood); R(g, 3, 16, 3, 7, PAL.woodd); R(g, 26, 16, 3, 7, PAL.woodd); vase(g, 8, 12, 4, VASES[0]); vase(g, 17, 12, 3, VASES[1]); vase(g, 25, 12, 4, VASES[2]); });
+  prop('wheel', 32, 24, g => { R(g, 4, 12, 24, 10, '#808890'); ellipse(g, 16, 11, 12, 3, '#A0A8B0'); ellipse(g, 16, 8, 5, 4, '#C88A60'); R(g, 13, 3, 6, 5, '#C88A60'); R(g, 14, 2, 4, 1, '#A86A40'); });
+  prop('kiln', 32, 32, g => { R(g, 2, 6, 28, 25, '#9A8A80'); R(g, 2, 6, 28, 3, '#B8A8A0'); R(g, 7, 13, 18, 12, '#3A3030'); R(g, 9, 15, 14, 8, '#F07830'); R(g, 11, 17, 10, 4, '#F8C040'); R(g, 13, 0, 6, 6, '#7A6A60'); });
+  prop('rack', 32, 32, g => {
+    R(g, 2, 3, 28, 2, '#808890'); R(g, 3, 5, 2, 26, '#808890'); R(g, 27, 5, 2, 26, '#808890');
+    const cols = ['#E85848', PAL.wht, '#2E7A4A', '#F0C040', '#3A70C0'];
+    for (let k = 0; k < 5; k++) { const x = 4 + k * 5; R(g, x, 6, 6, 15, cols[k]); R(g, x - 1, 6, 1, 4, cols[k]); R(g, x + 6, 6, 1, 4, cols[k]); R(g, x + 2, 6, 2, 1, '#808890'); }
+  });
+  prop('mannequin', 16, 32, g => { ellipse(g, 8, 4, 3, 3, '#E8D8C0'); R(g, 3, 8, 10, 12, '#E85848'); R(g, 2, 8, 2, 5, '#E85848'); R(g, 12, 8, 2, 5, '#E85848'); text3(g, 'M', 7, 11, PAL.wht); R(g, 7, 20, 2, 9, '#707880'); R(g, 4, 29, 8, 2, '#707880'); });
+  prop('amp', 16, 24, g => { R(g, 1, 4, 14, 19, '#2A2A30'); R(g, 2, 5, 12, 3, '#C8A060'); R(g, 2, 9, 12, 13, '#3A3A42'); for (let y = 10; y < 22; y += 2) R(g, 3, y, 10, 1, '#2A2A30'); });
+  prop('guitar', 16, 32, g => { ellipse(g, 8, 23, 6, 6, '#D83838'); ellipse(g, 6, 17, 3, 3, '#D83838'); R(g, 6, 22, 5, 3, PAL.wht); R(g, 7, 2, 2, 16, '#3A2A1A'); R(g, 6, 0, 4, 3, '#202020'); R(g, 3, 30, 10, 2, '#505860'); });
+  prop('jukebox', 32, 32, g => { R(g, 3, 6, 26, 25, '#A03060'); ellipse(g, 16, 7, 13, 6, '#A03060'); ellipse(g, 16, 8, 10, 4, '#F8C040'); R(g, 7, 12, 18, 9, '#2A2A40'); for (let k = 0; k < 4; k++) R(g, 9 + k * 4, 14, 2, 5, ['#F05050', '#50D0F0', '#F0E050', '#70F070'][k]); R(g, 6, 23, 20, 6, '#601838'); for (let x = 8; x < 25; x += 3) R(g, x, 24, 2, 4, '#F8C040'); });
+  prop('drums', 32, 24, g => { ellipse(g, 16, 16, 7, 7, '#E8E8F0'); ellipse(g, 16, 16, 5, 5, '#3060B0'); ellipse(g, 6, 11, 5, 3, '#E0B040'); ellipse(g, 26, 9, 5, 2, '#E0B040'); R(g, 5, 12, 1, 11, '#808890'); R(g, 26, 10, 1, 13, '#808890'); ellipse(g, 24, 15, 4, 3, '#3060B0'); });
+  prop('wallmap', 48, 32, g => {
+    R(g, 0, 0, 48, 30, '#8A6A40'); R(g, 2, 2, 44, 26, '#EAD9A8');
+    ellipse(g, 14, 12, 8, 6, '#9CC488'); ellipse(g, 32, 17, 9, 6, '#9CC488'); ellipse(g, 30, 9, 4, 3, '#B8D498'); R(g, 20, 20, 3, 2, '#9CC488');
+    for (let x = 4; x < 46; x += 8) R(g, x, 2, 1, 26, '#D8C690'); for (let y = 6; y < 28; y += 8) R(g, 2, y, 44, 1, '#D8C690');
+    P(g, 14, 12, PAL.red); P(g, 33, 16, PAL.red); for (let i = 0; i < 9; i++) P(g, 15 + i * 2, 13 + Math.round(i / 3), '#C04040');
+    ellipse(g, 41, 23, 3, 3, '#8A6A40'); P(g, 41, 19, '#8A6A40');
+  }, true);
+  prop('globe', 16, 32, g => { ellipse(g, 8, 10, 7, 7, '#3A78C0'); ellipse(g, 6, 8, 3, 2, '#5AA048'); ellipse(g, 10, 13, 2, 2, '#5AA048'); R(g, 7, 17, 2, 9, '#C8A060'); R(g, 3, 26, 10, 3, '#8A6A40'); });
+  prop('maptable', 48, 24, g => { R(g, 1, 4, 46, 10, PAL.wood); R(g, 1, 4, 46, 2, PAL.woodl); R(g, 3, 14, 3, 9, PAL.woodd); R(g, 42, 14, 3, 9, PAL.woodd); R(g, 6, 3, 18, 9, '#EAD9A8'); R(g, 8, 5, 6, 4, '#9CC488'); R(g, 26, 2, 16, 10, '#F0E8D0'); R(g, 28, 4, 2, 6, '#3A78C0'); R(g, 31, 6, 9, 1, '#C04040'); });
+  prop('artist', 16, 16, g => { R(g, 1, 1, 14, 14, '#202030'); ellipse(g, 8, 6, 3, 3, '#F8C898'); R(g, 4, 9, 8, 5, '#A03060'); R(g, 2, 13, 12, 1, '#F8C040'); }, true);
   prop('passport', 32, 32, g => { R(g, 2, 18, 28, 12, PAL.woodd); R(g, 3, 4, 26, 15, '#C8E8F8'); R(g, 9, 6, 14, 11, '#3A3A80'); R(g, 10, 7, 12, 9, '#4848A0'); ellipse(g, 16, 10, 3, 3, '#E0B040'); R(g, 12, 14, 8, 1, '#E0B040'); });
-  prop('boatmodel', 32, 32, g => { R(g, 2, 18, 28, 12, PAL.woodd); R(g, 3, 4, 26, 15, '#C8E8F8'); for (let y = 0; y < 5; y++) R(g, 6 + y * 2, 12 + y, 20 - y * 4, 1, y < 2 ? '#3A78C0' : PAL.woodd); R(g, 15, 5, 1, 7, PAL.woodd); R(g, 16, 6, 5, 5, PAL.wht); });
+  prop('boatmodel', 32, 32, g => { R(g, 2, 18, 28, 12, PAL.woodd); R(g, 3, 4, 26, 15, '#C8E8F8'); for (let y = 0; y < 6; y++) R(g, 5 + y * 2, 12 + y, 22 - y * 4, 1, y === 0 ? PAL.wht : y === 2 ? PAL.wht : y < 4 ? '#D8282C' : '#F0ECE2'); R(g, 22, 5, 1, 7, '#D8A868'); R(g, 7, 8, 13, 2, PAL.wht); R(g, 9, 10, 1, 2, '#D8A868'); R(g, 17, 10, 1, 2, '#D8A868'); R(g, 4, 11, 2, 2, '#2A3A90'); });
   prop('sprout', 32, 32, g => { R(g, 2, 18, 28, 12, PAL.woodd); R(g, 3, 4, 26, 15, '#C8E8F8'); R(g, 10, 14, 12, 5, PAL.soil); R(g, 15, 8, 2, 6, PAL.leafd); ellipse(g, 12, 9, 3, 2, PAL.leaf); ellipse(g, 20, 8, 3, 2, PAL.leafl); });
   prop('mic', 16, 32, g => { R(g, 7, 10, 2, 20, '#505860'); R(g, 3, 29, 10, 2, '#505860'); ellipse(g, 8, 6, 3, 4, '#303038'); P(g, 7, 4, '#A0A0A8'); });
   prop('easel', 32, 32, g => { R(g, 6, 4, 2, 27, PAL.woodd); R(g, 24, 4, 2, 27, PAL.woodd); R(g, 4, 3, 24, 18, PAL.wht); R(g, 6, 5, 20, 14, '#F8F0E0'); ellipse(g, 12, 11, 4, 3, PAL.red); R(g, 16, 8, 8, 8, '#2E7A4A'); });
@@ -480,6 +534,54 @@ function building(kind) {
       // timone decorativo
       ellipse(g, 18, 46, 6, 6, '#7A4A28'); ellipse(g, 18, 46, 4, 4, '#B8885A'); for (let a = 0; a < 8; a++) { const an = a * Math.PI / 4; P(g, 18 + Math.round(Math.cos(an) * 7), 46 + Math.round(Math.sin(an) * 7), '#7A4A28'); }
       win(70, 40); doorAt(g, 36, 49, '#5A3A20'); door = 2; break;
+    }
+    case 'ceramica': {
+      w = 6; h = 4; c = make(w, h, 0); g = c.g;
+      roofSlope(g, 1, 2, 94, 20, '#C86A3A');
+      R(g, 3, 22, 90, 42, '#F2DEC4');
+      // fascia di maioliche
+      for (let x = 3; x < 93; x += 6) { R(g, x, 23, 6, 6, (x / 6) % 2 < 1 ? '#2E6AB0' : '#F0D040'); P(g, x + 2, 25, PAL.wht); P(g, x + 3, 26, PAL.wht); }
+      R(g, 6, 31, 84, 8, '#2E6AB0'); text3(g, 'CERAMICA', 32, 33, PAL.wht);
+      R(g, 6, 42, 26, 18, '#4A3020'); R(g, 7, 43, 24, 16, PAL.glass); wins.push([7, 43, 24, 16]);
+      for (let k = 0; k < 3; k++) { const col = ['#2E6AB0', '#E8B030', '#3A9A6A'][k]; ellipse(g, 12 + k * 8, 54, 3, 4, col); R(g, 11 + k * 8, 48, 3, 2, col); }
+      win(68, 44, 18, 12); doorAt(g, 36, 49, '#2E6AB0'); door = 2; break;
+    }
+    case 'musica': {
+      w = 7; h = 5; top = 28; c = make(w, h, top); g = c.g;
+      // disco gigante sul tetto
+      R(g, 54, 26, 4, 10, '#303038');
+      ellipse(g, 56, 22, 22, 22, '#18181E'); for (let r = 8; r < 22; r += 3) for (let a = 0; a < 64; a++) { const an = a / 64 * Math.PI * 2; if ((a + r) % 5) P(g, 56 + Math.round(Math.cos(an) * r), 22 + Math.round(Math.sin(an) * r), '#2A2A34'); }
+      ellipse(g, 56, 22, 7, 7, '#D83838'); ellipse(g, 56, 22, 1, 1, '#F8F8F8'); for (let i = 0; i < 6; i++) P(g, 44 + i, 10 + i, '#5A5A6A');
+      R(g, 0, top + 6, 112, 74, '#4A3070'); R(g, 0, top + 6, 112, 4, '#6A4A98');
+      R(g, 8, top + 14, 96, 10, '#1A1028'); text3(g, 'CASA DELLA MUSICA', 23, top + 17, '#F070C0');
+      for (let k = 0; k < 4; k++) { const x = 8 + k * 26; win(x, top + 30, 16, 12, '#2A1A40'); }
+      for (let i = 0; i < 6; i++) { P(g, 6 + i * 20, top + 12, ['#F05050', '#50D0F0', '#F0E050'][i % 3]); }
+      doorAt(g, 52, top + 58, '#1A1028', 16, 22); R(g, 50, top + 54, 20, 3, '#F070C0');
+      door = 3; break;
+    }
+    case 'tshirt': {
+      w = 6; h = 4; top = 14; c = make(w, h, top); g = c.g;
+      // insegna a forma di maglietta
+      R(g, 34, 0, 28, 18, '#E85848'); R(g, 28, 0, 8, 8, '#E85848'); R(g, 60, 0, 8, 8, '#E85848'); R(g, 43, 0, 10, 3, '#B83030'); text3(g, 'MT', 44, 7, PAL.wht);
+      R(g, 0, top + 4, 96, 60, '#F8F8F4'); R(g, 0, top + 4, 96, 4, '#303038');
+      R(g, 6, top + 11, 84, 9, '#303038'); text3(g, 'T-SHIRT GRAFICHE', 16, top + 13, '#F0C040');
+      R(g, 4, top + 24, 28, 28, '#303038'); R(g, 5, top + 25, 26, 26, PAL.glass); wins.push([5, top + 25, 26, 26]);
+      for (let k = 0; k < 3; k++) { const x = 7 + k * 8, col = ['#E85848', '#2E7A4A', '#F0C040'][k]; R(g, x, top + 30, 6, 9, col); R(g, x - 1, top + 30, 8, 3, col); }
+      R(g, 64, top + 24, 28, 28, '#303038'); R(g, 65, top + 25, 26, 26, PAL.glass); wins.push([65, top + 25, 26, 26]);
+      R(g, 70, top + 30, 14, 16, '#3A70C0'); R(g, 67, top + 30, 20, 4, '#3A70C0');
+      doorAt(g, 36, top + 49, '#303038', 16, 15); R(g, 38, top + 51, 12, 10, PAL.glass);
+      door = 2; break;
+    }
+    case 'mappe': {
+      w = 6; h = 4; top = 16; c = make(w, h, top); g = c.g;
+      // mappamondo sul tetto
+      ellipse(g, 74, 10, 9, 9, '#3A78C0'); ellipse(g, 71, 7, 4, 3, '#5AA048'); ellipse(g, 77, 13, 3, 2, '#5AA048'); R(g, 73, 18, 2, 6, '#C8A060');
+      roofSlope(g, 1, top + 2, 94, 20, '#3A7A7A');
+      R(g, 3, top + 22, 90, 42, '#E8D8A8');
+      R(g, 6, top + 25, 84, 9, '#5A4020'); text3(g, 'STUDIO DELLE MAPPE', 12, top + 27, '#F0E0B0');
+      // rosa dei venti
+      ellipse(g, 18, top + 47, 8, 8, '#F8F0D8'); R(g, 17, top + 39, 2, 16, '#C04040'); R(g, 10, top + 46, 16, 2, '#5A4020'); text3(g, 'N', 16, top + 34, '#C04040');
+      win(70, top + 40); doorAt(g, 36, top + 49, '#5A4020'); door = 2; break;
     }
   }
   return { img: outline(c), w, h, top, door, wins };
@@ -657,7 +759,7 @@ function icon(kind) {
     case 'stage': R(g, 1, 10, 14, 5, PAL.woodd); R(g, 1, 2, 14, 2, '#303038'); R(g, 1, 2, 2, 8, '#303038'); R(g, 13, 2, 2, 8, '#303038'); R(g, 3, 4, 4, 6, PAL.red); R(g, 9, 4, 4, 6, PAL.red); P(g, 8, 5, PAL.yel); break;
     case 'passport': R(g, 3, 1, 10, 14, '#3A3A80'); ellipse(g, 8, 6, 2, 2, '#E0B040'); R(g, 5, 10, 6, 1, '#E0B040'); break;
     case 'land': R(g, 1, 10, 14, 5, PAL.soil); R(g, 7, 4, 2, 6, PAL.leafd); ellipse(g, 5, 5, 2, 1, PAL.leaf); ellipse(g, 11, 4, 2, 1, PAL.leafl); break;
-    case 'boat': for (let y = 0; y < 4; y++) R(g, 2 + y, 9 + y, 12 - y * 2, 1, y < 1 ? PAL.wht : '#3A78C0'); R(g, 7, 2, 1, 7, PAL.woodd); R(g, 8, 3, 5, 5, PAL.wht); break;
+    case 'boat': for (let y = 0; y < 5; y++) R(g, 2 + y, 9 + y, 12 - y * 2, 1, y === 0 || y === 2 ? PAL.wht : '#D8282C'); R(g, 11, 2, 1, 7, '#D8A868'); R(g, 3, 5, 8, 1, PAL.wht); R(g, 4, 6, 1, 3, '#D8A868'); R(g, 9, 6, 1, 3, '#D8A868'); R(g, 0, 8, 2, 2, '#2A3A90'); break;
     case 'mega': R(g, 2, 6, 3, 4, '#F8D030'); for (let i = 0; i < 8; i++) R(g, 5 + i, 6 - i / 2, 1, 4 + i, '#F8D030'); R(g, 2, 10, 2, 4, '#2C3440'); break;
     case 'note': R(g, 10, 2, 2, 9, PAL.ol); ellipse(g, 8, 11, 3, 2, PAL.ol); R(g, 10, 2, 4, 2, PAL.ol); break;
     case 'tomb': R(g, 4, 3, 8, 12, '#9CA0A8'); R(g, 7, 5, 2, 6, '#5C6068'); R(g, 5, 7, 6, 2, '#5C6068'); break;

@@ -17,10 +17,10 @@ Build command vuoto → Output directory `/`*.
 ## Comandi
 | Azione | Tastiera | Telefono |
 |---|---|---|
-| Muoversi | Frecce / WASD | Croce |
-| Parlare / confermare | Z, Spazio | A |
-| Correre / indietro | X (tenuto premuto), Esc | B |
-| Menu | Invio | START |
+| Muoversi | Frecce | Croce (si può far scorrere il dito) |
+| Parlare / confermare | Z, A, Spazio | A |
+| Correre / indietro | X, S (tenuto premuto), Esc | B |
+| Menu (apre e chiude) | Invio | START |
 | Musica on/off | M | menu → Opzioni |
 
 Funziona anche con un gamepad. Parametri utili nell'URL: `?skip` salta l'intro,
@@ -36,6 +36,14 @@ js/gfx.js       tutta la pixel art, disegnata in codice
 js/audio.js     sintetizzatore chiptune e musiche
 js/game.js      motore: movimento, dialoghi, menu, lotta, salvataggi
 ```
+
+### Via delle passioni
+A sud della città (passa dal sentiero dietro casa di Mauro): Bottega della Ceramica, T-shirt grafiche,
+Casa della Musica (jukebox con gli artisti preferiti + il gioco ritmico "Chitarra Eroica"),
+la chitarra acustica sulla panchina, il campetto di calcio con Mauro da piccolo e lo Studio delle Mappe.
+
+**Aggiungere le foto**: metti le immagini in `img/ceramica/`, `img/tshirt/`, `img/calcio/`, `img/mappe/`
+e aggiungi una riga per ogni foto in `PASSIONS` dentro `js/data.js`. Gli artisti vanno in `ARTISTS`.
 
 ### Aggiornare i contenuti
 - **Contatti**: `PROFILE.contacts` in `js/data.js` (ci sono dei segnaposto da sostituire).

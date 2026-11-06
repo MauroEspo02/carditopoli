@@ -53,6 +53,16 @@ const Sound = (() => {
         { w: 'triangle', v: 0.2, s: 'F2-6 C3-6 F2-6 Bb2-6 G2-6 C3-6 C3-6 F2-6' },
       ]
     },
+    // brano rock originale per il gioco della chitarra (20 battute da 8 passi)
+    rock: {
+      step: 0.15, loop: false, ch: [
+        { w: 'square', v: 0.12, s: 'r-8 r-8 ' + rep('E4 E4 G4 E4 A4 E4 B4 A4  G4 G4 E4 D4 E4-2 r-2  E4 E4 G4 E4 A4 E4 B4 A4  G4 A4 B4 D5 B4-2 A4-2  E5-2 D5 B4 D5-2 E5-2  G5-2 F#5 E5 D5-2 B4-2  C5-2 B4 A4 G4-2 A4-2  B4-4 r-2 B4 D#5', 2) + ' E5 D5 B4 A4 G4 E4 G4 A4  E4-8' },
+        { w: 'square', v: 0.04, s: rep('E3 E3 B3 E3 E3 B3 E3 D3', 2) + ' ' + rep(rep('E3 E3 B3 E3 E3 B3 E3 D3', 3) + ' G3 G3 D4 G3 D3 D3 A3 D3  ' + rep('E3 E3 B3 E3 E3 B3 E3 D3', 1) + ' G3 G3 D4 G3 D3 D3 A3 D3  C3 C3 G3 C3 A2 A2 E3 A2  B2 B2 F#3 B2 B2 B2 F#3 B2', 2) + ' ' + rep('E3 E3 B3 E3 E3 B3 E3 D3', 2) },
+        { w: 'triangle', v: 0.22, s: rep('E2-2 E3-2 E2-2 E3-2', 2) + ' ' + rep(rep('E2-2 E3-2 E2-2 E3-2', 3) + ' G2-2 G3-2 D2-2 D3-2  E2-2 E3-2 E2-2 E3-2  G2-2 G3-2 D2-2 D3-2  C2-2 C3-2 A1-2 A2-2  B1-2 B2-2 B1-2 B2-2', 2) + ' ' + rep('E2-2 E3-2 E2-2 E3-2', 2) },
+        { w: 'noise', v: 0.06, s: rep('x r o r x o o r', 20) },
+      ]
+    },
+    chitarra: { step: 0.12, loop: false, ch: [{ w: 'triangle', v: 0.25, s: 'E3 B3 E4 G4 B4 G4 E4 B3  A3 E4 A4 C5 E5-4  D4 A4 D5 F#5 A5-2 F#5 D5  E4 B4 E5 G#5 B5-6' }, { w: 'square', v: 0.03, s: 'E3-8 A3-8 D4-8 E4-8' }] },
     catch: { step: 0.09, loop: false, ch: [{ w: 'square', v: 0.13, s: 'C5 E5 G5 C6-2 r-1 G5 C6-6' }, { w: 'triangle', v: 0.22, s: 'C3-4 G2-2 C3-7' }] },
     badge: { step: 0.1, loop: false, ch: [{ w: 'square', v: 0.13, s: 'G4 C5 E5 G5-2 E5 G5 C6-6 r-1 B5 C6-2 D6-2 E6-8' }, { w: 'triangle', v: 0.22, s: 'C3-4 E3-3 G2-3 C3-4 G2-4 C3-8' }] },
   };
@@ -145,6 +155,11 @@ const Sound = (() => {
   }
   return {
     init, play, jingle, stop, sfx,
+    // suona un brano una volta sola (per il gioco della chitarra)
+    once(name, onEnd) { curName = null; if (!ctx) { if (onEnd) setTimeout(onEnd, 30000); return; } start(name, onEnd || (() => { })); },
+    // note della prima voce di un brano con il loro tempo in secondi
+    chart(name) { const tr = TRACKS[name]; let t = 0; const out = []; parse(tr.ch[0].s).forEach(n => { if (n.n !== 'r') out.push({ t, n: n.n, midi: SEMI[n.n.slice(0, -1)] + (+n.n.slice(-1) + 1) * 12 }); t += n.d * tr.step; }); return { notes: out, len: t }; },
+    get ready() { return !!ctx; },
     setMusic(on) { musicOn = on; if (musicG) musicG.gain.value = on ? 1 : 0; },
     setSfx(on) { sfxOn = on; if (sfxG) sfxG.gain.value = on ? 1 : 0; },
     get musicOn() { return musicOn; }, get sfxOn() { return sfxOn; },

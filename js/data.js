@@ -160,5 +160,52 @@ const LOOKS = {
   vigile: { style: 'cap', cap: '#F8F8F8', hair: '#3A2A1A', shirt: '#2A3A5A', pants: '#2A3A5A' },
   custode: { style: 'cap', cap: '#3A78C0', hair: '#C0C0C0', shirt: '#F0E8D8', pants: '#3A4A5A', beard: '#C0C0C0' },
   bimbo: { style: 'short', hair: '#C08040', shirt: '#60C0E0', pants: '#E8A040' },
+  maurobimbo: { style: 'caschetto', hair: '#F4D878', shirt: '#4AA8F0', pants: '#F8F8F8', shoes: '#F8F8F8', blush: true },
+  fonico: { style: 'cap', cap: '#202028', hair: '#3A2A1A', shirt: '#303040', pants: '#202028', beard: '#3A2A1A' },
+  ceramista: { style: 'bun', hair: '#8A5A30', shirt: '#D8C8B0', pants: '#5A4A3A', apron: '#6A8AB0' },
+  commessa: { style: 'long', hair: '#1A1A1A', shirt: '#E85848', pants: '#303038', skirt: '#303038' },
+  cartografo: { style: 'short', hair: '#A0A0A0', shirt: '#5A6A4A', pants: '#4A3A2A', glasses: true, beard: '#A0A0A0' },
   volontaria: { style: 'long', hair: '#2A1A10', shirt: '#6A8A5A', pants: '#4A3A2A', skirt: '#4A3A2A' },
 };
+
+/* =========================================================
+   VIA DELLE PASSIONI
+   Per aggiungere le foto: metti i file nella cartella indicata
+   (es. img/ceramica/) e aggiungi una riga in "items", tipo:
+   { img: 'img/ceramica/vaso-blu.jpg', title: 'Vaso blu', desc: 'Fatto al tornio, 2025' },
+   ========================================================= */
+const PASSIONS = {
+  ceramica: {
+    title: 'BOTTEGA DELLA CERAMICA', folder: 'img/ceramica/',
+    intro: 'Tutti i pezzi di ceramica fatti da MAURO.',
+    items: [
+      // { img: 'img/ceramica/01.jpg', title: 'Titolo del pezzo', desc: 'Tecnica, anno...' },
+    ],
+  },
+  tshirt: {
+    title: 'T-SHIRT GRAFICHE', folder: 'img/tshirt/',
+    intro: 'Le magliette disegnate da MAURO.',
+    items: [
+      // { img: 'img/tshirt/01.jpg', title: 'Nome della grafica', desc: '' },
+    ],
+  },
+  calcio: {
+    title: 'ALBUM DEL CALCIO', folder: 'img/calcio/',
+    intro: 'MAURO da piccolo, con il pallone sempre tra i piedi.',
+    items: [
+      // { img: 'img/calcio/01.jpg', title: 'Prima partita', desc: '19..' },
+    ],
+  },
+  mappe: {
+    title: 'STUDIO DELLE MAPPE', folder: 'img/mappe/',
+    intro: 'Mappe e cartografie realizzate da MAURO (QGIS, Earth Engine, a mano).',
+    items: [
+      // { img: 'img/mappe/01.jpg', title: 'NDVI lungo il muro, Qalqilya', desc: 'Landsat · Google Earth Engine' },
+    ],
+  },
+};
+
+/* Gli artisti preferiti di MAURO (Casa della Musica → jukebox).
+   Aggiungi righe tipo: { name: 'Nome artista', genre: 'Genere', note: 'Perché mi piace', url: 'https://open.spotify.com/...' }, */
+const ARTISTS = [
+];

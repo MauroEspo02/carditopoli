@@ -48,7 +48,7 @@ function makePalco() {
 
 /* ---------------- LA CITTÀ ---------------- */
 function buildTown() {
-  const W = 60, H = 48;
+  const W = 60, H = 66;
   const m = { id: 'town', name: 'CARDITOPOLI', w: W, h: H, t: newGrid(W, H, '.'), objs: [], npcs: [], warps: {}, outdoor: true, music: 'town' };
 
   // campi a nord
@@ -96,6 +96,10 @@ function buildTown() {
   addBld(m, 45, 33, 'pullmeup', 'pullmeup');
   addBld(m, 22, 35, 'casa', 'casa');
   addBld(m, 37, 39, 'archivio', 'archivio');
+  addBld(m, 4, 50, 'ceramica', 'ceramica');
+  addBld(m, 12, 49, 'musica', 'musica');
+  addBld(m, 37, 50, 'tshirt', 'tshirt');
+  addBld(m, 45, 50, 'mappe', 'mappe');
   m.objs.push({ kind: 'prop', name: 'palco', x: 52, y: 33, w: 6, h: 4, img: makePalco(), ox: 0, oy: 4 * 16 - 72, solid: true, act: () => Game.projectTalk('fritz', ['Sul palco c\'è scritto FRITZ.', 'Le luci sono ancora calde dall\'ultimo concerto...']) });
 
   // arredo piazza
@@ -113,7 +117,7 @@ function buildTown() {
   addProp(m, 'crates', 51, 27, { fw: 2, act: ['Cassette di pomodori datterini. Profumano d\'estate.'] });
   addProp(m, 'barrier', 56, 29, { fw: 3, oy: 0 });
   addProp(m, 'cone', 57, 31); addProp(m, 'cone', 58, 31); addProp(m, 'cone', 58, 30);
-  addProp(m, 'boat', 48, 41, { fw: 3, solid: true, act: () => Game.projectTalk('enzo', ['Un gozzo di legno, dipinto di bianco e blu.', 'È una delle barche costruite a mano da nonno Enzo.']) });
+  addProp(m, 'boat', 47, 40, { fw: 4, fh: 2, oy: -16, solid: true, act: () => Game.projectTalk('enzo', ['Un gozzo di legno, dipinto di bianco e blu.', 'È una delle barche costruite a mano da nonno Enzo.']) });
   addProp(m, 'bush', 34, 21); addProp(m, 'bush', 43, 37 + 2); addProp(m, 'bush', 20, 33 + 0); addProp(m, 'bush', 31, 34);
   // lapidi
   const tombs = [
@@ -148,11 +152,50 @@ function buildTown() {
   addNpc(m, 'contadino', 'contadino', 40, 10, 'down', ['Queste sono fragole di Cardito! Una volta le conoscevano tutti.', 'Non le toccare, che non sono ancora mature.'], { wander: 2 });
 
   m.zones = [
+    [2, 47, 57, 63, 'VIA DELLE PASSIONI'],
     [2, 2, 57, 13, 'CAMPI DI CARCIOFI'], [43, 16, 57, 38, 'VIA DEI PROGETTI'], [15, 14, 42, 29, 'PIAZZA GARIBALDI'],
     [2, 16, 14, 31, 'GIARDINI SABAUDI'], [2, 32, 14, 45, 'L\'ORTO DI LAND'], [33, 33, 57, 45, 'IL LAGHETTO'], [15, 30, 29, 45, 'QUARTIERE SUD'],
   ];
+  buildPassioni(m);
   m.encounter = true;
   return m;
+}
+
+/* ---------------- VIA DELLE PASSIONI ---------------- */
+function makePitchLines(tw, th) {
+  const c = mk(tw * 16, th * 16), g = c.g, W = tw * 16, H = th * 16, L = 'rgba(248,248,248,.9)';
+  R(g, 3, 3, W - 6, 1, L); R(g, 3, H - 4, W - 6, 1, L); R(g, 3, 3, 1, H - 6, L); R(g, W - 4, 3, 1, H - 6, L);
+  R(g, W >> 1, 3, 1, H - 6, L);
+  for (let a = 0; a < 80; a++) { const an = a / 80 * Math.PI * 2; P(g, (W >> 1) + Math.round(Math.cos(an) * 14), (H >> 1) + Math.round(Math.sin(an) * 14), L); }
+  R(g, 3, (H >> 1) - 20, 30, 1, L); R(g, 3, (H >> 1) + 20, 30, 1, L); R(g, 33, (H >> 1) - 20, 1, 41, L);
+  R(g, W - 33, (H >> 1) - 20, 30, 1, L); R(g, W - 33, (H >> 1) + 20, 30, 1, L); R(g, W - 34, (H >> 1) - 20, 1, 41, L);
+  return c;
+}
+function buildPassioni(m) {
+  // filare di alberi che separa il quartiere sud dalla via
+  for (let x = 2; x < 58; x += 2) if (x !== 28 && x !== 30) addTree(m, x, 46);
+  fill(m, '=', 29, 41, 2, 13);
+  fill(m, '#', 2, 54, 56, 2);
+  // campetto
+  for (let x = 34; x <= 56; x++) { m.t[57][x] = 'F'; m.t[63][x] = 'F'; }
+  for (let y = 57; y <= 63; y++) { m.t[y][34] = 'F'; m.t[y][56] = 'F'; }
+  m.t[57][45] = '=';
+  fill(m, 'p', 35, 58, 21, 5);
+  m.objs.push({ kind: 'prop', name: 'lines', x: 35, y: 58, w: 21, h: 5, img: makePitchLines(21, 5), ox: 0, oy: 0, solid: false, flat: true });
+  addProp(m, 'goal', 35, 59, { fh: 3 });
+  m.objs.push({ kind: 'prop', name: 'goalR', x: 55, y: 59, w: 1, h: 3, img: mirror(PROPS.goal), ox: 0, oy: 0, solid: true });
+  addProp(m, 'ball', 44, 60, { act: ['Il pallone. È un po\' sgonfio, ma per una partitella va benissimo.'] });
+  addNpc(m, 'maurobimbo', 'maurobimbo', 42, 60, 'right', () => Game.npcTalk('calcio'));
+  // arredo
+  [[10, 53], [21, 53], [34, 53], [52, 53]].forEach(([x, y]) => addProp(m, 'lamp', x, y, { lamp: true }));
+  addProp(m, 'bench', 13, 57, { act: () => Game.chitarra() });
+  addProp(m, 'acoustic', 15, 57, { act: () => Game.chitarra() });
+  m.objs.push({ kind: 'prop', name: 'fountain', x: 22, y: 58, w: 3, h: 2, img: PROPS.fountain, ox: 0, oy: 32 - 40, solid: true, act: ['Una fontana con le piastrelle di maiolica. Qualcuno ha dimenticato un plettro sul bordo.'] });
+  [[3, 58], [7, 60], [28, 59]].forEach(([x, y]) => addTree(m, x, y, 'pine'));
+  [[5, 57], [10, 58], [19, 60], [26, 57], [12, 61], [17, 62], [31, 61], [2, 62]].forEach(([x, y]) => m.t[y][x] = 'f');
+  addSign(m, 31, 53, ['VIA DELLE PASSIONI', 'Ceramica, magliette, musica, chitarra, calcio e mappe: le cose che MAURO ama fare.']);
+  addSign(m, 47, 56, ['CAMPETTO DI CARDITOPOLI', 'Qui MAURO ha tirato i primi calci al pallone.']);
+  addNpc(m, 'passante', 'ragazza', 25, 55, 'left', ['La CASA DELLA MUSICA ha un disco gigante sul tetto! Dentro si può suonare la chitarra elettrica.', 'Io non ci riesco mai, le note vanno troppo veloci!'], { wander: 3 });
 }
 
 /* ---------------- INTERNI ---------------- */
@@ -236,6 +279,41 @@ function buildInteriors(town) {
     addProp(m, 'shelf', 10, 1, { fh: 2, act: ['Mappe antiche dei Savoia. Molto, molto dettagliate.'] });
     addProp(m, 'plant', 1, 6, { fh: 2 }); addProp(m, 'plant', 10, 6, { fh: 2 });
     addNpc(m, 'guida_s', 'guida', 7, 4, 'down', () => Game.npcTalk('sabaude'));
+  });
+  R2('ceramica', 'BOTTEGA DELLA CERAMICA', 10, 8, 'w', '#F0D8C0', m => {
+    addProp(m, 'vaseshelf', 0, 1, { fh: 2, act: () => Game.passion('ceramica') });
+    addProp(m, 'vaseshelf', 2, 1, { fh: 2, act: () => Game.passion('ceramica') });
+    addProp(m, 'kiln', 7, 1, { fh: 2, act: ['Il forno per la cottura. Dentro ci sono mille gradi... meglio non aprire!'] });
+    addProp(m, 'wheel', 1, 4, { act: ['Il tornio. L\'argilla è ancora umida: qualcuno stava lavorando a un vaso.'] });
+    addProp(m, 'vases', 6, 5, { act: () => Game.passion('ceramica') });
+    addProp(m, 'plant', 9, 4, { fh: 2 });
+    addNpc(m, 'ceramista', 'ceramista', 5, 3, 'down', () => Game.npcTalk('ceramica'));
+  });
+  R2('musica', 'CASA DELLA MUSICA', 12, 9, 'w', '#3A2858', m => {
+    [2, 4, 7, 9].forEach(x => addProp(m, 'artist', x, 0, { solid: false, fh: 1, oy: 0, wallItem: true }));
+    addProp(m, 'jukebox', 1, 1, { fh: 2, act: () => Game.artists() });
+    addProp(m, 'amp', 4, 2, { act: ['Un amplificatore. La manopola del volume arriva a 11.'] });
+    addProp(m, 'drums', 5, 2, { fw: 2, act: ['Una batteria. Tu-tum-tss!'] });
+    addProp(m, 'amp', 7, 2, { act: ['Un altro amplificatore, coperto di adesivi.'] });
+    addProp(m, 'guitar', 10, 2, { act: () => Game.rhythm() });
+    addProp(m, 'rug', 4, 4, { fw: 3, fh: 2, solid: false });
+    addProp(m, 'sofa', 8, 6, { fw: 3, act: ['Il divano dove si ascoltano i dischi a occhi chiusi.'] });
+    addNpc(m, 'fonico', 'fonico', 9, 4, 'left', () => Game.npcTalk('musica'));
+  });
+  R2('tshirt', 'T-SHIRT GRAFICHE', 10, 8, 'm', '#F4F4F4', m => {
+    addProp(m, 'rack', 1, 1, { fh: 2, act: () => Game.passion('tshirt') });
+    addProp(m, 'mannequin', 4, 1, { fh: 2, act: () => Game.passion('tshirt') });
+    addProp(m, 'rack', 7, 1, { fh: 2, act: () => Game.passion('tshirt') });
+    addProp(m, 'counter', 5, 4, { act: () => Game.npcTalk('tshirt') });
+    addProp(m, 'plant', 1, 5, { fh: 2 }); addProp(m, 'plant', 9, 5, { fh: 2 });
+    addNpc(m, 'commessa', 'commessa', 6, 3, 'down', () => Game.npcTalk('tshirt'), { counter: true });
+  });
+  R2('mappe', 'STUDIO DELLE MAPPE', 10, 8, 'w', '#D8C8A0', m => {
+    addProp(m, 'wallmap', 3, 0, { fw: 3, fh: 2, oy: 0, solid: false, act: () => Game.passion('mappe') });
+    addProp(m, 'shelf', 0, 1, { fh: 2, act: ['Atlanti, carte topografiche, un manuale di QGIS pieno di orecchie.'] });
+    addProp(m, 'globe', 8, 1, { fh: 2, act: ['Un mappamondo. Qualcuno ci ha disegnato sopra un puntino: CARDITO.'] });
+    addProp(m, 'maptable', 2, 4, { act: () => Game.passion('mappe') });
+    addNpc(m, 'cartografo', 'cartografo', 7, 5, 'left', () => Game.npcTalk('mappe'));
   });
   R2('archivio', 'ARCHIVIO ENZO', 10, 8, 'w', '#B8885A', m => {
     addProp(m, 'boatmodel', 1, 1, { fh: 2, act: () => Game.projectTalk('enzo', ['Il modellino di un gozzo. Sotto c\'è scritto "BARCA 1".']) });

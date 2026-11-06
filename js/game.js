@@ -36,7 +36,7 @@ addEventListener('resize', fit); fit();
 /* ---------------- input ---------------- */
 const Input = (() => {
   const held = {}, just = new Set(); let dirs = [];
-  const KEYS = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', KeyZ: 'a', Space: 'a', KeyJ: 'a', KeyX: 'b', Backspace: 'b', Escape: 'b', KeyK: 'b', Enter: 'start', ShiftLeft: 'select', ShiftRight: 'select' };
+  const KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', KeyZ: 'a', KeyA: 'a', Space: 'a', KeyJ: 'a', KeyX: 'b', KeyS: 'b', Backspace: 'b', Escape: 'b', KeyK: 'b', Enter: 'start', ShiftLeft: 'select', ShiftRight: 'select' };
   const DIRS = ['up', 'down', 'left', 'right'];
   function press(b) { if (!held[b]) { just.add(b); if (DIRS.includes(b)) { dirs = dirs.filter(d => d !== b); dirs.push(b); } } held[b] = true; Sound.init(); }
   function release(b) { held[b] = false; dirs = dirs.filter(d => d !== b); }
@@ -46,11 +46,31 @@ const Input = (() => {
   });
   addEventListener('keyup', e => { const b = KEYS[e.code]; if (b) release(b); });
   addEventListener('blur', () => Object.keys(held).forEach(release));
-  document.querySelectorAll('[data-btn]').forEach(bt => {
+  // croce direzionale: un solo elemento, si può far scorrere il dito
+  const dp = document.querySelector('.dpad'); let dpDir = null;
+  const dpBtn = d => dp.querySelector('.' + d);
+  function dpSet(d) {
+    if (d === dpDir) return;
+    if (dpDir) { release(dpDir); dpBtn(dpDir).classList.remove('on'); }
+    dpDir = d; if (d) { press(d); dpBtn(d).classList.add('on'); if (navigator.vibrate) navigator.vibrate(6); }
+  }
+  function dpFrom(e) {
+    const r = dp.getBoundingClientRect(), x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2);
+    if (Math.hypot(x, y) < r.width * 0.12) return dpDir;
+    return Math.abs(x) > Math.abs(y) ? (x > 0 ? 'right' : 'left') : (y > 0 ? 'down' : 'up');
+  }
+  if (dp) {
+    dp.addEventListener('pointerdown', e => { e.preventDefault(); dp.setPointerCapture(e.pointerId); dpSet(dpFrom(e)); });
+    dp.addEventListener('pointermove', e => { if (dpDir) { e.preventDefault(); dpSet(dpFrom(e)); } });
+    const end = e => { e.preventDefault(); dpSet(null); };
+    dp.addEventListener('pointerup', end); dp.addEventListener('pointercancel', end); dp.addEventListener('lostpointercapture', () => dpSet(null));
+    dp.addEventListener('contextmenu', e => e.preventDefault());
+  }
+  document.querySelectorAll('.pad [data-btn]:not(.d)').forEach(bt => {
     const b = bt.dataset.btn;
     const on = e => { e.preventDefault(); bt.classList.add('on'); press(b); if (navigator.vibrate) navigator.vibrate(8); };
     const off = e => { e.preventDefault(); bt.classList.remove('on'); release(b); };
-    bt.addEventListener('pointerdown', on); bt.addEventListener('pointerup', off); bt.addEventListener('pointercancel', off); bt.addEventListener('pointerleave', off);
+    bt.addEventListener('pointerdown', e => { bt.setPointerCapture(e.pointerId); on(e); }); bt.addEventListener('pointerup', off); bt.addEventListener('pointercancel', off); bt.addEventListener('lostpointercapture', off);
     bt.addEventListener('contextmenu', e => e.preventDefault());
   });
   // gamepad
@@ -65,7 +85,13 @@ const Input = (() => {
     };
     for (const k in st) { if (st[k] && !prev[k]) press(k); if (!st[k] && prev[k]) release(k); prev[k] = st[k]; }
   }
-  return { held, just: b => just.has(b), dir: () => dirs[dirs.length - 1] || null, end() { just.clear(); }, poll, tap(b) { press(b); setTimeout(() => release(b), 30); } };
+  const hold = {};
+  function repeat() { // ripetizione automatica delle direzioni nei menu
+    const out = [];
+    for (const d of DIRS) { if (held[d]) { hold[d] = (hold[d] || 0) + 1; if (hold[d] > 20 && hold[d] % 5 === 0) out.push(d); } else hold[d] = 0; }
+    return out;
+  }
+  return { held, just: b => just.has(b), dir: () => dirs[dirs.length - 1] || null, end() { just.clear(); }, poll, repeat, tap(b) { press(b); setTimeout(() => release(b), 30); } };
 })();
 
 /* ---------------- stato e salvataggi ---------------- */
@@ -149,6 +175,7 @@ function menu(items, opt = {}) {
         const n = items.length;
         if (b === 'up') sel = (sel - cols + n) % n; else if (b === 'down') sel = (sel + cols) % n;
         else if (b === 'left' && cols > 1) sel = (sel - 1 + n) % n; else if (b === 'right' && cols > 1) sel = (sel + 1) % n;
+        else if (b === 'start' && opt.startBack) { Sound.sfx('back'); popLayer(L); return res(-1); }
         else if (b === 'a' || b === 'start') return pick();
         else if (b === 'b') { if (opt.noBack) return; Sound.sfx('back'); popLayer(L); return res(-1); }
         else return;
@@ -193,7 +220,7 @@ function initGfx() {
    MONDO
    ========================================================= */
 let MAP = null, solid = null, NPCS = [];
-const PL = { x: 0, y: 0, px: 0, py: 0, dir: 'down', moving: false, tx: 0, ty: 0, tiles: 0, turn: 0, bumpT: 0 };
+const PL = { qa: 0, qs: 0, still: 9, x: 0, y: 0, px: 0, py: 0, dir: 'down', moving: false, tx: 0, ty: 0, tiles: 0, turn: 0, bumpT: 0 };
 let busy = 0, zoneName = '';
 const DV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPP = { up: 'down', down: 'up', left: 'right', right: 'left' };
@@ -236,6 +263,8 @@ function canAct() { return Layers.length === 0 && busy === 0 && scene === 'world
 function updatePlayer() {
   const run = Input.held.b && canAct();
   const spd = run ? 4 : 2;
+  if (canAct() || PL.moving) { if (Input.just('a')) PL.qa = 6; if (Input.just('start')) PL.qs = 6; }
+  if (PL.qa > 0) PL.qa--; if (PL.qs > 0) PL.qs--;
   if (PL.moving) {
     const tx = PL.tx * 16, ty = PL.ty * 16;
     PL.px += Math.sign(tx - PL.px) * Math.min(spd, Math.abs(tx - PL.px));
@@ -243,13 +272,15 @@ function updatePlayer() {
     if (PL.px === tx && PL.py === ty) { PL.moving = false; PL.x = PL.tx; PL.y = PL.ty; PL.tiles++; onStep(); }
     return;
   }
-  if (!canAct()) return;
-  if (Input.just('start')) { Sound.sfx('select'); mainMenu(); return; }
-  if (Input.just('a')) { interact(); return; }
+  if (!canAct()) { PL.still = 0; return; }
+  if (PL.qs > 0) { PL.qs = 0; PL.qa = 0; Sound.sfx('select'); mainMenu(); return; }
+  if (PL.qa > 0) { PL.qa = 0; interact(); return; }
   const d = Input.dir();
-  if (!d) { PL.turn = 0; return; }
-  if (d !== PL.dir && !PL.turn) { PL.dir = d; PL.turn = 6; return; }
-  if (PL.turn > 1) { PL.turn--; return; }
+  if (!d) { PL.turn = 0; PL.still++; return; }
+  // da fermo: un tocco breve gira il personaggio, tenendo premuto cammina
+  if (d !== PL.dir && PL.still > 1 && !PL.turn) { PL.dir = d; PL.turn = 5; return; }
+  if (PL.turn > 1 && Input.held[d]) { PL.turn--; return; }
+  PL.turn = 0; PL.still = 0;
   PL.dir = d;
   const [dx, dy] = DV[d], nx = PL.x + dx, ny = PL.y + dy;
   // uscita dagli interni: tappetino + giù
@@ -351,6 +382,7 @@ function tileImg(ch, x, y) {
   const t = TILES[ch]; if (!t) return null;
   if (t.fence) return fenceTile(tileAt(x, y - 1) === 'F', tileAt(x, y + 1) === 'F', tileAt(x - 1, y) === 'F', tileAt(x + 1, y) === 'F');
   if (t.wall) return wallTile(t.wall, MAP.wall);
+  if (t.stripe) return t.v[(x >> 1) % 2];
   if (t.anim) return t.v[((frame / t.speed) | 0) % t.anim];
   return t.v[hash2(x, y) % t.v.length];
 }
@@ -488,6 +520,22 @@ const Game = {
       case 'mercoleterry': return Game.projectTalk('mercoleterry', ['Benvenuto da MERCOLETERRY!', 'Datterini campani e ciliegini: la passata più chiacchierata di Carditopoli.', 'Nome, etichetta, logo, video e sito: firmato MAURO.']);
       case 'pullmeup': return Game.projectTalk('pullmeup', ['Ué, socio! Benvenuto in PULLME UP.', 'Sei anni di social, Meta, SEO, siti e contenuti.', 'Facciamo crescere i locali indipendenti, un post alla volta.']);
       case 'sabaude': return Game.projectTalk('sabaudo', ['Bogia nen! Benvenuto alle RESIDENZE SABAUDE.', 'In vetrina c\'è il PASSAPORTO SABAUDO: un viaggio a tappe nelle residenze reali del Piemonte.']);
+      case 'ceramica':
+        await say(['Benvenuto nella BOTTEGA! Qui l\'argilla diventa vasi, piatti e tazze.', 'Tutti i pezzi sugli scaffali li ha fatti MAURO, al tornio e a mano.']);
+        return Game.passion('ceramica');
+      case 'tshirt':
+        await say(['Ciao! Qui vendiamo le T-SHIRT GRAFICHE disegnate da MAURO.', 'Ogni maglietta è una grafica originale. Vuoi vederle tutte?']);
+        return Game.passion('tshirt');
+      case 'calcio':
+        await say(['Ué! Io sono MAURO... ma da piccolo!', 'Passavo le giornate qui al campetto, col pallone sempre tra i piedi.', 'Vuoi vedere il mio album di foto?']);
+        return Game.passion('calcio');
+      case 'mappe':
+        await say(['Benvenuto nello STUDIO DELLE MAPPE.', 'MAURO ama le carte geografiche: le studia, le disegna e le costruisce con QGIS e i satelliti.', 'Ecco la sua collezione.']);
+        return Game.passion('mappe');
+      case 'musica':
+        await say(['Benvenuto nella CASA DELLA MUSICA!', 'Il JUKEBOX là in fondo ha gli artisti preferiti di MAURO.', 'E se ti senti un rocker, prendi la CHITARRA ELETTRICA: le frecce che scendono vanno suonate a tempo!']);
+        if (S.flags.rhythmBest) await say(`Il record attuale è di ${S.flags.rhythmBest} punti. Riesci a batterlo?`);
+        break;
       case 'archivio': return Game.projectTalk('enzo', ['Benvenuto all\'ARCHIVIO ENZO.', 'Qui sono custodite le barche di legno costruite a mano da nonno Enzo.', 'MAURO le sta ricostruendo in 3D, una per una, partendo dalle foto. Lavori in corso!']);
     }
   },
@@ -503,6 +551,20 @@ const Game = {
     const x = EXTRAS.find(e => e.id === id);
     await openProject(x);
     if (!S.extras.includes(id)) { S.extras.push(id); autosave(); }
+  },
+  passion: id => openGallery(PASSIONS[id]),
+  artists: () => openArtists(),
+  async chitarra() {
+    await say('La chitarra acustica di MAURO. Le corde sono un po\' consumate...');
+    if (await ask('Vuoi suonarla?') !== 0) return;
+    Sound.jingle('chitarra');
+    await say(['♪ Plin plin plon... ♪', 'Un arpeggio dolce dolce. MAURO la suona da quando era ragazzo.'], { auto: 0 });
+  },
+  async rhythm() {
+    await say('Una chitarra elettrica rossa, attaccata all\'amplificatore.');
+    if (await ask('Vuoi suonare CHITARRA EROICA?') !== 0) return;
+    await say(isTouch ? 'Premi la freccia della croce giusta quando la nota arriva sulla linea. B per uscire.' : 'Premi la FRECCIA giusta quando la nota arriva sulla linea. X per uscire.');
+    await playRhythm();
   },
   openContacts: () => openContacts(),
   openTrainer: () => openTrainer(0),
@@ -674,7 +736,8 @@ async function mainMenu() {
     for (; ;) {
       const items = ['CARDIDEX', 'PROGETTI', 'MAURO', 'SALVA', 'OPZIONI', 'ESCI'];
       const desc = ['Le competenze catturate', 'Tutti i lavori di Mauro', 'Scheda e curriculum', 'Salva la partita', 'Musica, testo, orario', 'Chiudi il menu'];
-      sel = await menu(items, { pos: { right: '4px', top: '4px', width: '92px' }, start: sel, desc });
+      sel = await menu(items, { pos: { right: '4px', top: '4px', width: '92px' }, start: sel, desc, startBack: true });
+      if (sel < 0) return;
       if (sel === 0) await openDex();
       else if (sel === 1) await openProjects();
       else if (sel === 2) await openTrainer(0);
@@ -689,6 +752,175 @@ async function mainMenu() {
 function snapshot() { S.x = PL.moving ? PL.tx : PL.x; S.y = PL.moving ? PL.ty : PL.y; S.dir = PL.dir; return S; }
 function save() { store.set(SAVE_KEY, snapshot()); }
 function autosave() { if (S.flags.started) save(); }
+
+/* ---------------- galleria foto (via delle passioni) ---------------- */
+function openGallery(P0) {
+  const items = P0.items.length ? P0.items : Array.from({ length: 6 }, () => null);
+  const pan = panel(P0.title, P0.items.length ? `${P0.items.length} PEZZI` : 'FOTO IN ARRIVO');
+  const body = pan.querySelector('.body');
+  const intro = el('div', '', esc(P0.intro)); css(intro, { position: 'absolute', left: '6px', right: '6px', top: '3px', fontSize: '7.5px' }); body.appendChild(intro);
+  const grid = el('div'); css(grid, { position: 'absolute', left: '6px', right: '6px', top: '14px', bottom: '4px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: '52px', gap: '4px', overflow: 'hidden' }); body.appendChild(grid);
+  let sel = 0, zoom = null;
+  const ph = '<div style="height:36px;display:flex;align-items:center;justify-content:center;background:#D8E0D0;border-radius:2px;color:#7A8A7A;font-size:6.5px">FOTO<br>IN ARRIVO</div>';
+  function cell(it, i) {
+    const c = el('div', 'card'); css(c, { position: 'relative', padding: '2px', cursor: 'pointer', textAlign: 'center' });
+    c.innerHTML = it ? `<div style="height:36px;background:#E8E8E0 url('${esc(it.img)}') center/cover no-repeat;border-radius:2px"></div><div style="font-size:6.5px;line-height:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.title || '')}</div>` : ph + '<div style="font-size:6.5px;line-height:9px;color:#9AA89A">???</div>';
+    c.onclick = () => { sel = i; draw(); open(); };
+    return c;
+  }
+  function draw() {
+    const top = Math.max(0, Math.floor(sel / 3) - 1) * 3;
+    grid.innerHTML = ''; items.slice(top, top + 6).forEach((it, k) => { const c = cell(it, top + k); if (top + k === sel) c.style.boxShadow = '0 0 0 2px #E05040, inset 0 0 0 1px #FFF'; grid.appendChild(c); });
+  }
+  function open() {
+    const it = items[sel]; if (!it) { toast('Foto in arrivo!', 60); return; }
+    Sound.sfx('select');
+    zoom = el('div', 'panel'); css(zoom, { background: '#101810' });
+    zoom.innerHTML = `<img src="${esc(it.img)}" style="position:absolute;left:4px;right:4px;top:4px;bottom:24px;width:calc(100% - 8px);height:calc(100% - 28px);object-fit:contain">
+      <div style="position:absolute;left:6px;right:6px;bottom:3px;color:#F0F0E0;text-shadow:none;font-size:7.5px;line-height:9px"><b>${esc(it.title || '')}</b> ${esc(it.desc || '')}</div>`;
+    zoom.onclick = () => { zoom.remove(); zoom = null; };
+    pan.appendChild(zoom);
+  }
+  draw();
+  pan.querySelector('.foot').innerHTML = '<span><b>A</b> ingrandisci</span><span><b>←↑↓→</b> scegli</span><span><b>B</b> chiudi</span>';
+  return panelLayer(pan, b => {
+    if (zoom) { if (['a', 'b', 'start'].includes(b)) { zoom.remove(); zoom = null; Sound.sfx('back'); } return; }
+    if (b === 'b' || b === 'start') return 'close';
+    const n = items.length;
+    if (b === 'right') sel = (sel + 1) % n; else if (b === 'left') sel = (sel - 1 + n) % n;
+    else if (b === 'down') sel = Math.min(n - 1, sel + 3); else if (b === 'up') sel = Math.max(0, sel - 3);
+    else if (b === 'a') return open();
+    Sound.sfx('talk'); draw();
+  });
+}
+function openArtists() {
+  const pan = panel('JUKEBOX', 'GLI ARTISTI DI MAURO');
+  const body = pan.querySelector('.body');
+  if (!ARTISTS.length) {
+    const t = el('div', '', 'Il jukebox si accende... ma la lista è ancora vuota.<br><br>MAURO sta scegliendo i suoi artisti preferiti: torna presto!');
+    css(t, { position: 'absolute', left: '14px', right: '14px', top: '30px', textAlign: 'center', fontSize: '8.5px', lineHeight: '12px' }); body.appendChild(t);
+    pan.querySelector('.foot').innerHTML = '<span><b>B</b> chiudi</span>';
+    return panelLayer(pan, b => (b === 'b' || b === 'a' || b === 'start') ? 'close' : null);
+  }
+  const list = el('div', 'list'); css(list, { left: '4px', width: '100px' }); body.appendChild(list);
+  const view = el('div', 'card'); css(view, { left: '108px', top: '4px', right: '4px', bottom: '4px', padding: '6px' }); body.appendChild(view);
+  let sel = 0, top = 0; const VIS = 10;
+  function draw() {
+    if (sel < top) top = sel; if (sel >= top + VIS) top = sel - VIS + 1;
+    list.innerHTML = ARTISTS.slice(top, top + VIS).map((a, k) => `<div class="row ${top + k === sel ? 'sel' : ''}" data-i="${top + k}">♪ ${esc(a.name)}</div>`).join('');
+    list.querySelectorAll('.row').forEach(r => r.onclick = () => { sel = +r.dataset.i; draw(); });
+    const a = ARTISTS[sel];
+    view.innerHTML = `<div style="font-weight:700;font-size:11px;line-height:13px">${esc(a.name)}</div><span class="tag" style="background:#A03060">${esc(a.genre || 'musica')}</span><div class="desc-txt" style="margin-top:4px">${esc(a.note || '')}</div>${a.url ? `<a class="btnlink" href="${esc(a.url)}" target="_blank" rel="noopener">▶ ascolta</a>` : ''}`;
+  }
+  draw();
+  pan.querySelector('.foot').innerHTML = '<span><b>A</b> ascolta</span><span><b>↑↓</b> scorri</span><span><b>B</b> chiudi</span>';
+  return panelLayer(pan, b => {
+    if (b === 'b' || b === 'start') return 'close';
+    if (b === 'down') { sel = (sel + 1) % ARTISTS.length; Sound.sfx('talk'); draw(); }
+    if (b === 'up') { sel = (sel - 1 + ARTISTS.length) % ARTISTS.length; Sound.sfx('talk'); draw(); }
+    if (b === 'a') openLink(ARTISTS[sel].url);
+  });
+}
+
+/* =========================================================
+   MINI-GIOCO: CHITARRA EROICA (ritmico)
+   ========================================================= */
+let RH = null;
+const LANES = ['left', 'up', 'down', 'right'];
+const LANE_COL = ['#48C860', '#E84848', '#F0C838', '#4890F0'];
+function playRhythm() {
+  return new Promise(async res => {
+    busy++;
+    await fadeTo(1, 10);
+    const ch = Sound.chart('rock');
+    const mids = ch.notes.map(n => n.midi), lo = Math.min(...mids), hi = Math.max(...mids);
+    let prevLane = -1;
+    const notes = ch.notes.map((n, i) => {
+      let lane = Math.min(3, Math.floor((n.midi - lo) / (hi - lo + 1) * 4));
+      if (i && ch.notes[i - 1].midi === n.midi) lane = prevLane;
+      prevLane = lane; return { t: n.t + 0.05, lane, hit: 0 };
+    });
+    RH = { notes, t0: performance.now() / 1000, len: ch.len + 1.2, score: 0, combo: 0, best: 0, meter: 0.6, hits: 0, perfect: 0, flash: [0, 0, 0, 0], msg: '', msgT: 0, done: false, res };
+    scene = 'rhythm';
+    Sound.once('rock');
+    await fadeTo(0, 10);
+  });
+}
+function rhNow() { return performance.now() / 1000 - RH.t0; }
+async function rhEnd(failed) {
+  if (RH.done) return; RH.done = true;
+  Sound.stop();
+  const tot = RH.notes.length, acc = Math.round(RH.hits / tot * 100);
+  const stars = failed ? 0 : acc >= 95 ? 5 : acc >= 85 ? 4 : acc >= 70 ? 3 : acc >= 50 ? 2 : 1;
+  const newBest = !failed && RH.score > (S.flags.rhythmBest || 0);
+  if (newBest) { S.flags.rhythmBest = RH.score; autosave(); }
+  if (!failed) Sound.jingle(stars >= 3 ? 'badge' : 'catch');
+  await wait(30);
+  await say(failed ? ['Il pubblico ti fischia! La canzone si interrompe...', 'Riprova, il rock non si impara in un giorno!'] :
+    [`Fine del pezzo! PUNTI: ${RH.score} · PRECISIONE: ${acc}% · COMBO MAX: ${RH.best}`, `${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} ` + (stars >= 4 ? 'Una leggenda del rock di Carditopoli!' : stars >= 3 ? 'Il pubblico applaude!' : 'Si può fare di meglio... ma il cuore c\'era!')].concat(newBest ? ['NUOVO RECORD!'] : []));
+  await fadeTo(1, 12);
+  const r = RH.res; RH = null; scene = 'world'; Sound.play(MAP.music);
+  await fadeTo(0, 12); busy--; r();
+}
+function updateRhythm() {
+  if (!RH || RH.done) return;
+  const now = rhNow();
+  if (Input.just('b') && !Layers.length) { rhEnd(true); return; }
+  LANES.forEach((d, lane) => {
+    if (!Input.just(d)) return;
+    RH.flash[lane] = 8;
+    let best = null, bd = 1;
+    for (const n of RH.notes) { if (n.hit || n.lane !== lane) continue; const dd = Math.abs(n.t - now); if (dd < bd) { bd = dd; best = n; } }
+    if (best && bd < 0.14) {
+      best.hit = 1; RH.hits++; RH.combo++; RH.best = Math.max(RH.best, RH.combo);
+      const perfect = bd < 0.06; if (perfect) RH.perfect++;
+      RH.score += (perfect ? 100 : 50) * (1 + Math.min(3, Math.floor(RH.combo / 10)));
+      RH.meter = Math.min(1, RH.meter + 0.025); RH.msg = perfect ? 'PERFETTO!' : 'BENE!'; RH.msgT = 30; best.burst = 10;
+    } else { RH.combo = 0; RH.meter -= 0.03; Sound.sfx('bump'); }
+  });
+  for (const n of RH.notes) if (!n.hit && now - n.t > 0.16) { n.hit = -1; RH.combo = 0; RH.meter -= 0.07; RH.msg = 'MANCATA'; RH.msgT = 20; }
+  RH.flash = RH.flash.map(f => Math.max(0, f - 1)); if (RH.msgT) RH.msgT--;
+  if (RH.meter <= 0) { rhEnd(true); return; }
+  if (now > RH.len) rhEnd(false);
+}
+function drawRhythm() {
+  const g = ctx;
+  for (let y = 0; y < 160; y++) R(g, 0, y, 240, 1, y < 80 ? '#1A1030' : '#241640');
+  // luci del palco
+  for (let i = 0; i < 5; i++) { g.globalAlpha = 0.12 + 0.08 * Math.sin(frame / 10 + i); g.fillStyle = ['#F070C0', '#50D0F0', '#F0E050'][i % 3]; g.beginPath(); g.moveTo(20 + i * 50, 0); g.lineTo(i * 50, 160); g.lineTo(40 + i * 50, 160); g.fill(); }
+  g.globalAlpha = 1;
+  if (!RH) return;
+  const now = rhNow(), HIT = 136, SPEED = 95, X0 = 72, LW = 24;
+  R(g, X0 - 4, 0, LW * 4 + 8, 160, '#10081C'); R(g, X0 - 5, 0, 1, 160, '#5A4A80'); R(g, X0 + LW * 4 + 4, 0, 1, 160, '#5A4A80');
+  for (let l = 0; l < 4; l++) {
+    const x = X0 + l * LW; R(g, x + LW - 1, 0, 1, 160, '#2A1E44');
+    // tasto sulla linea
+    const on = RH.flash[l] > 0;
+    ellipse(g, x + 12, HIT, 9, 5, on ? LANE_COL[l] : '#3A2E58'); ellipse(g, x + 12, HIT, 6, 3, on ? '#FFFFFF' : '#1A1030');
+    // freccia
+    const ax = x + 12, ay = 152, c = LANE_COL[l];
+    const arr = { left: [[-3, 0], [0, -3], [0, 3]], right: [[3, 0], [0, -3], [0, 3]], up: [[0, -3], [-3, 0], [3, 0]], down: [[0, 3], [-3, 0], [3, 0]] }[LANES[l]];
+    g.fillStyle = c; g.beginPath(); g.moveTo(ax + arr[0][0], ay + arr[0][1]); g.lineTo(ax + arr[1][0], ay + arr[1][1]); g.lineTo(ax + arr[2][0], ay + arr[2][1]); g.fill();
+  }
+  R(g, X0 - 4, HIT, LW * 4 + 8, 1, '#F8F8F8');
+  for (const n of RH.notes) {
+    const y = HIT - (n.t - now) * SPEED; if (y < -10 || y > 170) continue;
+    const x = X0 + n.lane * LW + 12;
+    if (n.hit === 1) { if (n.burst > 0) { n.burst--; for (let k = 0; k < 6; k++) { const a = k + frame / 5; P(g, x + Math.cos(a) * (12 - n.burst), HIT + Math.sin(a) * (8 - n.burst / 2), LANE_COL[n.lane]); } } continue; }
+    const col = n.hit === -1 ? '#4A4058' : LANE_COL[n.lane];
+    ellipse(g, x, Math.round(y), 8, 4, '#101018'); ellipse(g, x, Math.round(y) - 1, 7, 3, col); R(g, x - 3, Math.round(y) - 2, 4, 1, '#FFFFFF');
+  }
+  // punteggio e "rock meter"
+  g.font = '700 8px "Pixelify Sans", monospace'; g.fillStyle = '#F8F0A0'; g.textBaseline = 'top';
+  g.fillText('PUNTI', 8, 8); g.fillStyle = '#FFFFFF'; g.fillText(String(RH.score), 8, 18);
+  g.fillStyle = '#F8F0A0'; g.fillText('COMBO', 8, 34); g.fillStyle = '#FFFFFF'; g.fillText(String(RH.combo) + (RH.combo >= 10 ? ' x' + (1 + Math.min(3, Math.floor(RH.combo / 10))) : ''), 8, 44);
+  g.fillStyle = '#F8F0A0'; g.fillText('PUBBLICO', 184, 8);
+  R(g, 186, 20, 46, 6, '#10081C'); R(g, 187, 21, Math.round(44 * Math.max(0, RH.meter)), 4, RH.meter > 0.5 ? '#58D080' : RH.meter > 0.25 ? '#F0C838' : '#F05838');
+  g.fillStyle = '#C8B8E8'; g.fillText('CHITARRA', 184, 140); g.fillText('EROICA', 190, 150);
+  const prog = Math.min(1, now / RH.len); R(g, 8, 150, 50, 3, '#10081C'); R(g, 8, 150, Math.round(50 * prog), 3, '#F070C0');
+  if (RH.msgT) { g.fillStyle = RH.msg === 'MANCATA' ? '#F07070' : '#FFFFFF'; const w = g.measureText(RH.msg).width; g.fillText(RH.msg, 120 - w / 2, 70); }
+  if (now < 2.2) { g.fillStyle = '#FFFFFF'; const t = now < 0.8 ? 'PRONTO?' : now < 1.6 ? 'VIA!' : ''; const w = g.measureText(t).width; g.fillText(t, 120 - w / 2, 60); }
+}
 
 /* =========================================================
    MINI-GIOCO: PRIMA O DOPO?
@@ -948,7 +1180,7 @@ async function intro() {
   introSpr = { who: 'mauro', x: 120, a: 0 };
   await tween(20, t => introSpr.a = t);
   await say(['E lui è MAURO!', 'Graphic designer, content creator ed economista della cultura. Freelance dal 2018.', 'Ogni edificio di Carditopoli custodisce uno dei suoi progetti.', 'Visitali tutti per ottenere le MEDAGLIE, e cattura i CARDIMON nell\'erba alta.']);
-  await say(isTouch ? ['Comandi: croce per muoverti, A per parlare, B per correre e tornare indietro, START per il menu.'] : ['Comandi: FRECCE per muoverti, Z per parlare, X per correre e tornare indietro, INVIO per il menu. M accende e spegne la musica.']);
+  await say(isTouch ? ['Comandi: croce per muoverti, A per parlare, B (tenuto premuto) per correre e per tornare indietro, START per il menu.'] : ['Comandi: FRECCE per muoverti, Z (o A) per parlare, X (o S) tenuto premuto per correre e per tornare indietro, INVIO per il menu. M accende e spegne la musica.']);
   await say('La tua avventura a CARDITOPOLI sta per cominciare!');
   await tween(30, t => { introSpr.shrink = t; });
   await fadeTo(1, 16); introSpr = null;
@@ -983,7 +1215,8 @@ function update() {
   for (let i = waits.length - 1; i >= 0; i--) { if (--waits[i].f <= 0) { const w = waits.splice(i, 1)[0]; w.r(); } }
   // input ai livelli UI
   const top = Layers[Layers.length - 1];
-  if (top) for (const b of ['a', 'b', 'start', 'up', 'down', 'left', 'right']) if (Input.just(b)) { top.input(b); break; }
+  const rep = Input.repeat();
+  if (top) { let done = false; for (const b of ['a', 'b', 'start', 'up', 'down', 'left', 'right']) if (Input.just(b)) { top.input(b); done = true; break; } if (!done && rep.length && !top.noRepeat) top.input(rep[0]); }
   Layers.forEach(l => l.update && l.update());
   if (bannerT > 0 && --bannerT === 0 && bannerEl) bannerEl.classList.remove('on');
 
@@ -996,6 +1229,8 @@ function update() {
     titleT++;
     const pr = titleEls && titleEls.querySelector('.press'); if (pr && !titleMenuOpen) pr.style.opacity = (titleT >> 5) & 1 ? 1 : 0.15;
     if (!titleMenuOpen && !Layers.length && (Input.just('start') || Input.just('a'))) { Sound.init(); Sound.play('title'); Sound.sfx('select'); titleMenu(); }
+  } else if (scene === 'rhythm') {
+    updateRhythm();
   } else if (scene === 'world') {
     S.time += 1 / 60;
     updatePlayer(); updateNpcs();
@@ -1007,6 +1242,7 @@ function render() {
   else if (scene === 'battle') drawBattle();
   else if (scene === 'title') drawSky(ctx, titleT, timePhase());
   else if (scene === 'intro') drawIntro();
+  else if (scene === 'rhythm') drawRhythm();
   else R(ctx, 0, 0, 240, 160, '#000');
   if (trans) {
     if (trans.flash) R(ctx, 0, 0, 240, 160, '#F8F8F8');
