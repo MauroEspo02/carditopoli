@@ -1136,15 +1136,26 @@ function drawSky(g, t, ph) {
     ellipse(g, 212, 72, 11, 11, ph === 'dusk' ? '#F8A060' : '#F8F0A0');
     for (let i = 0; i < 4; i++) { const x = ((i * 80 + t * 0.15 * (i % 2 ? 1 : 0.6)) % 300) - 40, y = 20 + i * 14; ellipse(g, x, y, 16, 4, '#F8F8F8'); ellipse(g, x + 10, y - 3, 10, 4, '#F8F8F8'); }
   }
-  // Vesuvio
-  const vc = ph === 'night' ? '#4A5288' : ph === 'dusk' ? '#8A6890' : '#7898C8';
-  g.fillStyle = vc; g.beginPath(); g.moveTo(30, 112); g.lineTo(78, 64); g.lineTo(92, 70); g.lineTo(104, 58); g.lineTo(118, 60); g.lineTo(176, 112); g.fill();
-  R(g, 100, 56 + 0, 12, 3, vc);
-  if (ph === 'night') { // luce della luna sul fianco del vulcano
-    g.fillStyle = '#6A74A8'; g.beginPath(); g.moveTo(78, 64); g.lineTo(92, 70); g.lineTo(104, 58); g.lineTo(118, 60); g.lineTo(150, 88); g.lineTo(122, 70); g.lineTo(104, 64); g.lineTo(92, 74); g.fill();
-    R(g, 100, 55, 12, 1, '#8A94C8'); }
+  // Vesuvio: Somma a sinistra, cono con cratere a destra, luce dal lato della luna
+  const VP = ph === 'night' ? { body: '#242C64', lit: '#5C6CB4', gul: '#1A2152', ridge: '#A4AEE0' }
+    : ph === 'dusk' ? { body: '#6A4A80', lit: '#B07890', gul: '#523868', ridge: '#F8B890' }
+    : { body: '#5A7CB0', lit: '#88AADC', gul: '#4A6A9C', ridge: '#D0E4F8' };
+  const prof = [[0, 112], [22, 102], [42, 88], [56, 79], [66, 74], [74, 77], [84, 85], [98, 92], [112, 82], [124, 71], [131, 66], [136, 66], [139, 71], [142, 66], [148, 67], [158, 78], [172, 92], [192, 106], [214, 112]];
+  const topAt = x => { for (let i = 0; i < prof.length - 1; i++) { const [x0, y0] = prof[i], [x1, y1] = prof[i + 1]; if (x >= x0 && x <= x1) return Math.round(y0 + (y1 - y0) * (x - x0) / (x1 - x0)); } return 112; };
+  for (let x = 0; x < 214; x++) {
+    const y = topAt(x), shade = topAt(x - 2) > topAt(x + 2) ? 0 : 1;   // 0 = pendio che scende a destra (illuminato)
+    for (let yy = y; yy < 114; yy++) {
+      let c = shade ? VP.body : VP.lit;
+      if (yy - y > 3 && (x + yy * 2) % 13 === 0) c = shade ? VP.gul : VP.body;   // canaloni diagonali
+      R(g, x, yy, 1, 1, c);
+    }
+    const nx = topAt(x + 1), d = Math.abs(nx - y);
+    R(g, x, Math.min(y, nx), 1, Math.max(1, d), VP.ridge);                      // cresta
+  }
+  // fumo leggero dal cratere
+  if (ph !== 'night') { ellipse(g, 139, 63, 4, 2, '#F0F0F8'); ellipse(g, 144, 59, 3, 2, '#E0E4F0'); }
   // skyline di Cardito
-  const sc = ph === 'night' ? '#1C2040' : ph === 'dusk' ? '#5A4060' : '#4E6E8E';
+  const sc = ph === 'night' ? '#10142E' : ph === 'dusk' ? '#5A4060' : '#4E6E8E';
   R(g, 0, 104, 240, 20, sc);
   [[6, 96, 22, 8], [30, 92, 18, 12], [52, 98, 26, 6], [150, 94, 30, 10], [184, 90, 20, 14], [208, 97, 32, 7]].forEach(([x, y, w, h]) => R(g, x, y, w, h, sc));
   R(g, 92, 74, 12, 30, sc); R(g, 94, 70, 8, 4, sc); R(g, 97, 64, 2, 6, sc); // campanile
